@@ -76,15 +76,12 @@ class MainWindow:
         self.substances = []
 
 
-    def _get_hazard_process(self, substance):
-        print("Starting", substance.name)
-        substance.get_hazards()
-        print("Done with", substance.name)
-        # self.update()
-        # print("Updated with", substance.name)
-
-    def test(self):
-        print("poo")
+    # def _get_hazard_process(self, substance):
+    #     print("Starting", substance.name)
+    #     substance.get_hazards()
+    #     print("Done with", substance.name)
+    #     # self.update()
+    #     # print("Updated with", substance.name)
 
     def search(self, names):
         self.substances = []
@@ -97,17 +94,13 @@ class MainWindow:
         processes = []
 
         for substance in self.substances:
-            processes.append(Thread(target=lambda x=substance: self._get_hazard_process(x)))
+            processes.append(Thread(target=lambda x=substance: x.get_hazards()))
             processes[-1].start()
 
         for process in processes:
             process.join()
-            #print("update")
-            #self.update()
 
         self.update()
-        
-        print("search complete")
             
     def get_formatted_hazards(self):
         out_str = ""
@@ -128,21 +121,13 @@ class MainWindow:
         return (out_str.strip("\n"), num_complete)
 
     def update(self):
-        print("update1")
         (out_str, num_complete) = self.get_formatted_hazards()
-        print("update2")
-
-        # lab.config(text=out_str)
-        # print("update2.1")
 
         self.progress_bar.set(num_complete / len(self.substances))
-        print("update3")
 
         self.output_box.set(out_str)
-        print("update4")
 
         self.root.update()
-        print("update5")
 
 
 class Substance:
@@ -172,7 +157,7 @@ class Substance:
 
                 if cid_raw["Fault"]["Code"] == "PUGREST.NotFound":
                     return None
-                    
+
                 elif cid_raw["Fault"]["Code"] == "PUGREST.ServerBusy":
                     too_fast = True
 
@@ -259,25 +244,6 @@ class Substance:
             self.hazards = ["Lol soz my code kinda broke for this one"]
 
 
-def test():
-    time.sleep(random.randint(0, 5))
-
-    print("FREEDOM1")
-
-    window.progress_bar.set(0.69)
-    print("FREEDOM2")
-
-
 window = MainWindow()
-
-
-'''p1 = Thread(target=test)
-p1.start()
-p2 = Thread(target=test)
-p2.start()
-
-p1.join()
-p2.join()'''
-
 
 window.root.mainloop()
