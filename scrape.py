@@ -6,159 +6,211 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 
-root = tk.Tk()
-root.title("COSHH magic")
-root.geometry(
-    str(int(root.winfo_screenwidth()/3))
-    + "x" +
-    str(int(root.winfo_screenheight()*4/5))
-)
+
+class SearchBox:
+    def __init__(self, master):
+        self.master = master
+
+        self.frame = tk.Frame(master.root)
+        self.frame.pack(fill=tk.X)
+
+        self.entry = tk.Text(self.frame, font=("Helvetica", 10), height=5)
+        self.entry.pack(fill=tk.BOTH)
+        self.entry.bind("<Control-Return>", self._button_click)
+
+        self.button = tk.Button(self.frame, text="Go", command=self._button_click)
+        self.button.pack(fill=tk.X)
+    
+    def get_text(self):
+        return self.entry.get("1.0", tk.END)
+
+    def get_names(self):
+        parse_text = self.get_text()
+
+        names = parse_text.split("\n")
+
+        return [x for x in names if x] # remove empty rows
+
+    def _button_click(self, *args, **kwargs):
+        self.master.search(self.get_names())
+
+class ProgressBar:
+    def __init__(self, master):
+        self.master = master
+
+        self.bar = ttk.Progressbar(master.root, orient=tk.HORIZONTAL, length=200, mode="determinate")
+        self.bar.pack(fill=tk.X)
+
+    def set(self, value):
+        self.bar['value'] = value * 100
+
+class OutputBox:
+    def __init__(self, master):
+        self.master = master
+
+        self.entry = tk.Text(master.root, font=("Helvetica", 10), state=tk.DISABLED)
+        self.entry.pack(fill=tk.BOTH, expand=True)
+    
+    def set(self, text):
+        self.entry.configure(state=tk.NORMAL)
+        self.entry.delete("1.0", tk.END)
+        self.entry.insert(tk.END, text)
+        self.entry.configure(state=tk.DISABLED)
+
+class MainWindow:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("COSHH magic")
+        self.root.geometry(
+            str(int(self.root.winfo_screenwidth()/3))
+            + "x" +
+            str(int(self.root.winfo_screenheight()*4/5))
+        )
+
+        self.search_box = SearchBox(self)
+        self.progress_bar = ProgressBar(self)
+        self.output_box = OutputBox(self)
+        
+        self.substances = []
 
 
-def get_cid(name):
-    cid_request = requests.get(
-        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + name.lower() + "/property/Title/JSON")
+    def search(self, names):
+        self.substances = []
 
-    cid_raw = json.loads(cid_request.text)
+        for name in names:
+            self.substances.append(Substance(name, self))
 
-    try:
-        return cid_raw["PropertyTable"]["Properties"][0]["CID"]
+        self.update()
 
-    except KeyError:
-        return None
+        for substance in self.substances:
+            substance.get_hazards()
 
-def get_json(cid, write_to_file=False):
-    r = requests.get(
-        "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + str(cid) + "/JSON")
+            self.update()
 
-    raw = r.text
 
-    if write_to_file:
-        file = open("scrape.txt", "w", encoding="utf16")
-        file.write(raw)
-        file.close()
+    def get_formatted_hazards(self):
+        out_str = ""
+        num_complete = len(self.substances)
 
-    return json.loads(raw)
+        for substance in self.substances:
+            out_str += "\t" + substance.name.capitalize() + ":\n"
 
-def find_hazards(jraw, strip_warnings=True):
-    section = jraw["Record"]["Section"]
+            if len(substance.hazards) == 0:
+                out_str += "Working..." + "\n"
+                num_complete -= 1
 
-    hazard_index = None
+            for hazard in substance.hazards:
+                out_str += hazard.strip(" ") + "\n"
+            
+            out_str += "\n"
+        
+        return (out_str.strip("\n"), num_complete)
 
-    for i in range(len(section)):
-        if section[i]["TOCHeading"] == "Safety and Hazards":
-            hazard_index = i
-            break
 
-    if hazard_index == None:
-        return ["No hazard info available on PubChem"]
+    def update(self):
+        (out_str, num_complete) = self.get_formatted_hazards()
 
-    else:
-        hazards = []
+        self.progress_bar.set(num_complete / len(self.substances))
 
-        section2 = section[hazard_index]["Section"][0]["Section"][0]["Information"]
+        self.output_box.set(out_str)
 
-        if len(section2) < 2:
-            return ["Not classified"]
+        self.root.update()
+
+
+class Substance:
+    def __init__(self, name, window):
+        self.name = name
+
+        self.hazards = []
+
+    def _get_cid(self):
+        cid_request = requests.get(
+            "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + self.name.lower() + "/property/Title/JSON")
+
+        cid_raw = json.loads(cid_request.text)
+
+        try:
+            return cid_raw["PropertyTable"]["Properties"][0]["CID"]
+
+        except KeyError:
+            return None
+
+    def _get_json(self, write_to_file=False):
+        r = requests.get(
+            "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + str(self.cid) + "/JSON")
+
+        raw = r.text
+
+        if write_to_file:
+            file = open("scrape.txt", "w", encoding="utf16")
+            file.write(raw)
+            file.close()
+
+        return json.loads(raw)
+
+    def _find_hazards(self, jraw, strip_warnings=True):
+        section = jraw["Record"]["Section"]
+
+        hazard_index = None
+
+        for i in range(len(section)):
+            if section[i]["TOCHeading"] == "Safety and Hazards":
+                hazard_index = i
+                break
+
+        if hazard_index == None:
+            return ["No hazard info available on PubChem"]
 
         else:
-            for j in section2:
-                if j["Name"] == "GHS Hazard Statements":
-                    for i in j["Value"]["StringWithMarkup"]:
-                        current_hazard = i["String"]
+            hazards = []
 
-                        # Cut out any crap immediately after the hazard number
-                        current_hazard = current_hazard[:4] + ':' + ':'.join(current_hazard.split(":")[1:])
+            section2 = section[hazard_index]["Section"][0]["Section"][0]["Information"]
 
-                        # Remove warnings in square brackets at end of each hazard
-                        if strip_warnings:
-                            current_hazard = '['.join(current_hazard.split("[")[:-1])
+            if len(section2) < 2:
+                return ["Not classified"]
 
-                        hazards.append(current_hazard)
+            else:
+                for j in section2:
+                    if j["Name"] == "GHS Hazard Statements":
+                        for i in j["Value"]["StringWithMarkup"]:
+                            current_hazard = i["String"]
 
-            hazards = sorted(list(dict.fromkeys(hazards)))
+                            # Cut out any crap immediately after the hazard number
+                            current_hazard = current_hazard[:4] + ':' + ':'.join(current_hazard.split(":")[1:])
 
-            return hazards
+                            # Remove warnings in square brackets at end of each hazard
+                            if strip_warnings:
+                                current_hazard = '['.join(current_hazard.split("[")[:-1])
+
+                            hazards.append(current_hazard)
+
+                hazards = sorted(list(dict.fromkeys(hazards)))
+
+                return hazards
 
 
-def get_hazards(name):
-    cid = get_cid(name)
+    def _get_hazards(self):
+        self.cid = self._get_cid()
 
-    if cid == None:
-        return ["Not in PubChem"]
+        if self.cid == None:
+            return ["Not in PubChem"]
 
-    else:
-        jraw = get_json(cid)
+        else:
+            jraw = self._get_json(self.cid)
 
-        return find_hazards(jraw)
+            return self._find_hazards(jraw)
 
-def format_hazards(names, hazards):
-    out_str = ""
-    num_complete = len(names)
 
-    for name in names:
-        out_str += "\t" + name.capitalize() + ":\n"
+    def get_hazards(self):
+        self.hazards = self._get_hazards()
 
-        if len(hazards[name]) == 0:
-            out_str += "Working..." + "\n"
-            num_complete -= 1
-
-        for hazard in hazards[name]:
-            out_str += hazard.strip(" ") + "\n"
-        
-        out_str += "\n"
-    
-    return (out_str.strip("\n"), num_complete)
-
-def update_output(names, hazards):
-    (out_str, num_complete) = format_hazards(names, hazards)
-
-    progress['value'] = num_complete / len(names) * 100
-
-    out_text.configure(state=tk.NORMAL)
-    out_text.delete("1.0", tk.END)
-    out_text.insert(tk.END, out_str)
-    out_text.configure(state=tk.DISABLED)
-
-    root.update()
-
-def go_button_click(*args, **kwargs):
-    parse_text = in_text.get("1.0", tk.END)
-
-    names = parse_text.split("\n")
-    names = [x for x in names if x]
-
-    hazards = dict.fromkeys(names, [])
-
-    update_output(names, hazards)
-
-    for name in names:
         try:
-            hazards[name] = get_hazards(name)
+            self.hazards = self._get_hazards()
 
         except Exception:
-            hazards.append(["Lol soz my code kinda broke for this one"])
-
-        update_output(names, hazards)
+            self.hazards = ["Lol soz my code kinda broke for this one"]
 
 
-# Tkinter window layout
-in_frame = tk.Frame(root)
+window = MainWindow()
 
-in_text = tk.Text(in_frame, font=("Helvetica", 10), height=5)
-in_text.pack(fill=tk.BOTH)
-in_text.bind("<Control-Return>", go_button_click)
-
-go_button = tk.Button(in_frame, text="Go", command=go_button_click)
-go_button.pack(fill=tk.X)
-
-progress = ttk.Progressbar(in_frame, orient=tk.HORIZONTAL, length=200, mode="determinate")
-progress.pack(fill=tk.X)
-
-in_frame.pack(fill=tk.X)
-
-out_text = tk.Text(root, font=("Helvetica", 10), state=tk.DISABLED)
-out_text.pack(fill=tk.BOTH, expand=True)
-
-
-root.mainloop()
+window.root.mainloop()
