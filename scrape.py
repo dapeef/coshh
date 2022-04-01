@@ -1,10 +1,12 @@
-from ctypes import alignment
-from turtle import onclick
+from re import sub
 import requests
 import json
 import tkinter as tk
 import tkinter.ttk as ttk
-
+from multiprocessing import Process
+from threading import Thread
+import time
+import random
 
 
 class SearchBox:
@@ -74,6 +76,16 @@ class MainWindow:
         self.substances = []
 
 
+    def _get_hazard_process(self, substance):
+        print("Starting", substance.name)
+        substance.get_hazards()
+        print("Done with", substance.name)
+        # self.update()
+        # print("Updated with", substance.name)
+
+    def test(self):
+        print("poo")
+
     def search(self, names):
         self.substances = []
 
@@ -82,12 +94,21 @@ class MainWindow:
 
         self.update()
 
+        processes = []
+
         for substance in self.substances:
-            substance.get_hazards()
+            processes.append(Thread(target=lambda x=substance: self._get_hazard_process(x)))
+            processes[-1].start()
 
-            self.update()
+        for process in processes:
+            process.join()
+            #print("update")
+            #self.update()
 
-
+        self.update()
+        
+        print("search complete")
+            
     def get_formatted_hazards(self):
         out_str = ""
         num_complete = len(self.substances)
@@ -106,15 +127,22 @@ class MainWindow:
         
         return (out_str.strip("\n"), num_complete)
 
-
     def update(self):
+        print("update1")
         (out_str, num_complete) = self.get_formatted_hazards()
+        print("update2")
+
+        # lab.config(text=out_str)
+        # print("update2.1")
 
         self.progress_bar.set(num_complete / len(self.substances))
+        print("update3")
 
         self.output_box.set(out_str)
+        print("update4")
 
         self.root.update()
+        print("update5")
 
 
 class Substance:
@@ -142,7 +170,7 @@ class Substance:
         raw = r.text
 
         if write_to_file:
-            file = open("scrape.txt", "w", encoding="utf16")
+            file = open(self.name+".txt", "w", encoding="utf16")
             file.write(raw)
             file.close()
 
@@ -196,7 +224,10 @@ class Substance:
             return ["Not in PubChem"]
 
         else:
-            jraw = self._get_json(self.cid)
+            jraw = {}
+
+            while not 'Record' in list(jraw.keys()):
+                jraw = self._get_json(write_to_file=False)
 
             return self._find_hazards(jraw)
 
@@ -211,6 +242,28 @@ class Substance:
             self.hazards = ["Lol soz my code kinda broke for this one"]
 
 
+def test():
+    time.sleep(random.randint(0, 5))
+
+    print("FREEDOM1")
+
+    window.progress_bar.set(0.69)
+    print("FREEDOM2")
+
+
 window = MainWindow()
+
+
+'''p1 = Thread(target=test)
+p1.start()
+p2 = Thread(target=test)
+p2.start()
+
+p1.join()
+p2.join()'''
+
+tl = tk.Toplevel(window.root)
+lab = tk.Label(tl, text="poo")
+lab.pack()
 
 window.root.mainloop()
