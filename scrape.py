@@ -152,29 +152,47 @@ class Substance:
         self.hazards = []
 
     def _get_cid(self):
-        cid_request = requests.get(
-            "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + self.name.lower() + "/property/Title/JSON")
+        too_fast = True
 
-        cid_raw = json.loads(cid_request.text)
+        while too_fast:
+            too_fast = False
 
-        try:
-            return cid_raw["PropertyTable"]["Properties"][0]["CID"]
+            cid_request = requests.get(
+                "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + self.name.lower() + "/property/Title/JSON")
+            
+            #print(self.name, cid_request.text)
 
-        except KeyError:
-            return None
+            cid_raw = json.loads(cid_request.text)
 
-    def _get_json(self, write_to_file=False):
-        r = requests.get(
-            "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + str(self.cid) + "/JSON")
+            if "PropertyTable" in list(cid_raw.keys()):
+                return cid_raw["PropertyTable"]["Properties"][0]["CID"]
+            
+            elif "Fault" in list(cid_raw.keys()):
+                print(self.name, cid_raw)
 
-        raw = r.text
+                if cid_raw["Fault"]["Code"] == "PUGREST.NotFound":
+                    return None
+                    
+                elif cid_raw["Fault"]["Code"] == "PUGREST.ServerBusy":
+                    too_fast = True
 
-        if write_to_file:
-            file = open(self.name+".txt", "w", encoding="utf16")
-            file.write(raw)
-            file.close()
+    def _get_json(self, write_to_file=True):
+        jraw = {}
 
-        return json.loads(raw)
+        while not 'Record' in list(jraw.keys()):
+            r = requests.get(
+                "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + str(self.cid) + "/JSON")
+
+            raw = r.text
+
+            if write_to_file:
+                file = open(self.name+".txt", "w", encoding="utf16")
+                file.write(raw)
+                file.close()
+
+            jraw = json.loads(raw)
+        
+        return jraw
 
     def _find_hazards(self, jraw, strip_warnings=True):
         section = jraw["Record"]["Section"]
@@ -210,7 +228,9 @@ class Substance:
                             if strip_warnings:
                                 current_hazard = '['.join(current_hazard.split("[")[:-1])
 
-                            hazards.append(current_hazard)
+                            # Don't add if empty
+                            if current_hazard.strip() != "":
+                                hazards.append(current_hazard)
 
                 hazards = sorted(list(dict.fromkeys(hazards)))
 
@@ -224,10 +244,7 @@ class Substance:
             return ["Not in PubChem"]
 
         else:
-            jraw = {}
-
-            while not 'Record' in list(jraw.keys()):
-                jraw = self._get_json(write_to_file=False)
+            jraw = self._get_json(write_to_file=False)
 
             return self._find_hazards(jraw)
 
@@ -262,8 +279,5 @@ p2.start()
 p1.join()
 p2.join()'''
 
-tl = tk.Toplevel(window.root)
-lab = tk.Label(tl, text="poo")
-lab.pack()
 
 window.root.mainloop()
