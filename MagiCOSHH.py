@@ -76,13 +76,6 @@ class MainWindow:
         self.substances = []
 
 
-    # def _get_hazard_process(self, substance):
-    #     print("Starting", substance.name)
-    #     substance.get_hazards()
-    #     print("Done with", substance.name)
-    #     # self.update()
-    #     # print("Updated with", substance.name)
-
     def search(self, names):
         self.substances = []
 
