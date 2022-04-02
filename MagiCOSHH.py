@@ -62,7 +62,7 @@ class OutputBox:
 class MainWindow:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("COSHH magic")
+        self.root.title("Magic COSHH searcher - Alistair White-Horne")
         self.root.geometry(
             str(int(self.root.winfo_screenwidth()/3))
             + "x" +
