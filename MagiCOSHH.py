@@ -1,12 +1,9 @@
-from re import sub
 import requests
 import json
 import tkinter as tk
 import tkinter.ttk as ttk
 from multiprocessing import Process
 from threading import Thread
-import time
-import random
 
 
 class SearchBox:
