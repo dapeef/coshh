@@ -31,7 +31,8 @@ class SearchBox:
         return [x for x in names if x] # remove empty rows
 
     def _button_click(self, *args, **kwargs):
-        self.master.search(self.get_names())
+        if len(self.get_names()) > 0:
+            self.master.search(self.get_names())
 
 class ProgressBar:
     def __init__(self, master):
