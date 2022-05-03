@@ -1,24 +1,44 @@
+from turtle import left
 import requests
 import json
 import tkinter as tk
 import tkinter.ttk as ttk
 from multiprocessing import Process
 from threading import Thread
+from tkinter import font
 
 
 class SearchBox:
     def __init__(self, master):
         self.master = master
 
-        self.frame = tk.Frame(master.root)
-        self.frame.pack(fill=tk.X)
+        self.frame = tk.Frame(master.root, border=2, relief=tk.GROOVE)
+        self.frame.pack(fill=tk.BOTH, padx=2, pady=2)
+        self.frame.grid_columnconfigure(0, weight=1)
 
-        self.entry = tk.Text(self.frame, font=("Helvetica", 10), height=5)
-        self.entry.pack(fill=tk.BOTH)
+        self.entry = tk.Text(self.frame, font=("Helvetica", 10), width=10, height=8)
+        self.entry.grid(column=0, row=0, sticky="ew", pady=2, padx=2)
         self.entry.bind("<Control-Return>", self._button_click)
 
+        self.radio_frame = tk.Frame(self.frame)
+        self.radio_frame.grid(column=1, row=0)
+
+        tk.Label(self.radio_frame, text="Search mode:").pack()
+
+        self.fast_var = tk.BooleanVar()
+        self.fast_var.set(True)
+        tk.Radiobutton(self.radio_frame, text="Fast", variable=self.fast_var, value=True).pack()
+        tk.Radiobutton(self.radio_frame, text="Safe", variable=self.fast_var, value=False).pack()
+        
+        tk.Label(self.radio_frame,
+            text="Use safe mode if fast mode is causing the program to freeze for more than ~15 secs",
+            justify=tk.CENTER,
+            wraplength=90,
+            font=(font.nametofont("TkDefaultFont"), 7)
+        ).pack()
+
         self.button = tk.Button(self.frame, text="Go", command=self._button_click)
-        self.button.pack(fill=tk.X)
+        self.button.grid(column=2, row=0, sticky="nesw", pady=2, padx=[0, 2])
     
     def get_text(self):
         return self.entry.get("1.0", tk.END)
@@ -32,14 +52,17 @@ class SearchBox:
 
     def _button_click(self, *args, **kwargs):
         if len(self.get_names()) > 0:
-            self.master.search(self.get_names())
+            self.master.search(self.get_names(), fast=self.fast_var.get())
 
 class ProgressBar:
     def __init__(self, master):
         self.master = master
 
-        self.bar = ttk.Progressbar(master.root, orient=tk.HORIZONTAL, length=200, mode="determinate")
-        self.bar.pack(fill=tk.X)
+        self.frame = tk.Frame(master.root, border=2, relief=tk.GROOVE)
+        self.frame.pack(fill=tk.BOTH, padx=2, pady=[0, 2])
+
+        self.bar = ttk.Progressbar(self.frame, orient=tk.HORIZONTAL, length=200, mode="determinate")
+        self.bar.pack(fill=tk.X, padx=[2, 3], pady=[2, 3])
 
     def set(self, value):
         self.bar['value'] = value * 100
@@ -48,8 +71,11 @@ class OutputBox:
     def __init__(self, master):
         self.master = master
 
-        self.entry = tk.Text(master.root, font=("Helvetica", 10), state=tk.DISABLED)
-        self.entry.pack(fill=tk.BOTH, expand=True)
+        self.frame = tk.Frame(master.root, border=2, relief=tk.GROOVE)
+        self.frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=[0, 2])
+
+        self.entry = tk.Text(self.frame, font=("Helvetica", 8), state=tk.DISABLED)
+        self.entry.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
     
     def set(self, text):
         self.entry.configure(state=tk.NORMAL)
@@ -74,7 +100,7 @@ class MainWindow:
         self.substances = []
 
 
-    def search(self, names):
+    def search(self, names, fast=True):
         self.substances = []
 
         for name in names:
@@ -82,14 +108,20 @@ class MainWindow:
 
         self.update()
 
-        processes = []
+        if fast:
+            processes = []
 
-        for substance in self.substances:
-            processes.append(Thread(target=lambda x=substance: x.get_hazards()))
-            processes[-1].start()
+            for substance in self.substances:
+                processes.append(Thread(target=lambda x=substance: x.get_hazards()))
+                processes[-1].start()
 
-        for process in processes:
-            process.join()
+            for process in processes:
+                process.join()
+        
+        else:
+            for substance in self.substances:
+                substance.get_hazards()
+                self.update()
 
         self.update()
             
