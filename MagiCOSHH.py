@@ -8,6 +8,8 @@ from threading import Thread
 from tkinter import font
 
 
+#TODO "no internet connection"
+
 class SearchBox:
     def __init__(self, master):
         self.master = master
@@ -16,8 +18,9 @@ class SearchBox:
         self.frame.pack(fill=tk.BOTH, padx=2, pady=2)
         self.frame.grid_columnconfigure(0, weight=1)
 
+        # Entry
         self.entry = tk.Text(self.frame, font=(
-            "Helvetica", 10), width=10, height=8)
+            "Helvetica", 10), width=10, height=9)
         self.entry.grid(column=0, row=0, sticky="ew", pady=2, padx=2)
         self.entry.bind("<Control-Return>", self._ctrl_enter)
         self.entry.insert(tk.END, """methanol\nethanol\ndichloromethane\n30% Bis-acrylamide/acrylamide
@@ -30,8 +33,28 @@ Dithiothreitol
 Perchloric acid
 Phosphoric acid""")
 
-        self.radio_frame = tk.Frame(self.frame)
-        self.radio_frame.grid(column=1, row=0)
+        # Choose which data to be displayed
+        self.choice_frame = tk.Frame(self.frame, border=2, relief=tk.GROOVE)
+        self.choice_frame.grid(column=1, row=0, padx=2, pady=2, sticky="ns")
+
+        tk.Label(self.choice_frame, text="Display:").pack()
+
+        self.hcodes_var = tk.BooleanVar()
+        tk.Checkbutton(self.choice_frame, text="Hazards", variable=self.hcodes_var).pack(anchor="w")
+        self.hcodes_var.set(True)
+
+        self.mass_var = tk.BooleanVar()
+        tk.Checkbutton(self.choice_frame, text="Molecular Weight", variable=self.mass_var).pack(anchor="w")
+
+        self.density_var = tk.BooleanVar()
+        tk.Checkbutton(self.choice_frame, text="Density", variable=self.density_var).pack(anchor="w")
+
+        self.mp_var = tk.BooleanVar()
+        tk.Checkbutton(self.choice_frame, text="Melting Point", variable=self.mp_var).pack(anchor="w")
+
+        # Search mode (safe vs fast)
+        self.radio_frame = tk.Frame(self.frame, border=2, relief=tk.GROOVE)
+        self.radio_frame.grid(column=2, row=0, padx=[0, 2], pady=2, sticky="ns")
 
         tk.Label(self.radio_frame, text="Search mode:").pack()
 
@@ -49,9 +72,10 @@ Phosphoric acid""")
                  font=(font.nametofont("TkDefaultFont"), 7)
                  ).pack()
 
+        # Go button
         self.button = tk.Button(self.frame, text="Go",
                                 command=self._button_click)
-        self.button.grid(column=2, row=0, sticky="nesw", pady=2, padx=[0, 2])
+        self.button.grid(column=3, row=0, sticky="nesw", pady=2, padx=[0, 2])
 
     def get_text(self):
         return self.entry.get("1.0", tk.END)
@@ -73,7 +97,12 @@ Phosphoric acid""")
 
     def _button_click(self, *args, **kwargs):
         if len(self.get_names()) > 0:
-            self.master.search(self.get_names(), fast=self.fast_var.get())
+            self.master.search(self.get_names(),
+                fast=self.fast_var.get(),
+                hcodes=self.hcodes_var.get(),
+                mass=self.mass_var.get(),
+                density=self.density_var.get(),
+                mp=self.mp_var.get(),)
 
 
 class ProgressBar:
@@ -157,26 +186,30 @@ class MainWindow:
 
         for substance in self.substances:
             out_str += "\t" + substance.name.capitalize() + ":\n"
-            
-            if substance.mass != None:
-                out_str += " - Molecular Weight: " + substance.mass + "\n"
-            
-            if substance.density != None:
-                out_str += " - Density: " + substance.density + "\n"
-            
-            if substance.mp != None:
-                out_str += " - Melting Point: " + substance.mp + "\n"
 
-            if len(substance.hazards) == 0:
+            if not substance.got_data:
                 out_str += "Working..." + "\n"
                 num_complete -= 1
 
             else:
-                if substance.hazards != ["Not in PubChem"]:
-                    out_str += " - Hazards:" + "\n"
+                if substance.mass != None:
+                    out_str += " - Molecular Weight: " + substance.mass + "\n"
+                
+                if substance.density != None:
+                    out_str += " - Density: " + substance.density + "\n"
+                
+                if substance.mp != None:
+                    out_str += " - Melting Point: " + substance.mp + "\n"
 
-                for hazard in substance.hazards:
-                    out_str += hazard.strip(" ") + "\n"
+                if substance.hazards != None:
+                    if substance.hazards != ["Not in PubChem"]:
+                        out_str += " - Hazards:" + "\n"
+                    
+                    if len(substance.hazards) == 0:
+                        out_str += "No hazards found\n"
+
+                    for hazard in substance.hazards:
+                        out_str += hazard.strip(" ") + "\n"
 
             out_str += "\n"
 
@@ -196,11 +229,13 @@ class Substance:
     def __init__(self, name, window):
         self.name = name
 
-        self.hazards = []
+        self.hazards = None
         self.mass = None
         self.mass_units = ""
         self.density = None
         self.mp = None
+
+        self.got_data = False
 
     def _get_cid(self):
         too_fast = True
@@ -315,6 +350,56 @@ class Substance:
                 self.mass = value["StringWithMarkup"][0]["String"]
                 self.mass_units = value["Unit"]
 
+    def _find_density(self):
+        chem_properties = self._find_heading(
+            self.jraw["Record"]["Section"],
+            "Chemical and Physical Properties"
+        )
+
+        if chem_properties == None:
+            self.density = "No data"
+
+        else:
+            experimental_properties = self._find_heading(
+                chem_properties["Section"],
+                "Experimental Properties"
+            )
+            if experimental_properties == None:
+                self.density = "No data"
+            
+            else:
+                density = self._find_heading(
+                    experimental_properties["Section"],
+                    "Density"
+                )
+
+                if density == None:
+                    self.density = "No data"
+
+                else:
+                    values = []
+
+                    for info in density["Information"]:
+                        try:
+                            values.append(info["Value"]["StringWithMarkup"][0]["String"])
+                        except KeyError:
+                            pass
+
+                    # density = ""
+
+                    # for value in values:
+                    #     if len(value) > len(density):
+                    #         density = value
+
+                    # if density == "":
+                    if len(values) > 0:
+                        density = values[-1]
+                    
+                    else:
+                        density = "No data"
+
+                    self.density = density
+
     def _find_mp(self):
         chem_properties = self._find_heading(
             self.jraw["Record"]["Section"],
@@ -373,7 +458,7 @@ class Substance:
                 self.hazards = ["Not in PubChem"]
 
             else:
-                self.jraw = self._get_json(write_to_file=True)
+                self.jraw = self._get_json(write_to_file=False)
 
                 if hcodes:
                     self._find_hazards()
@@ -381,12 +466,16 @@ class Substance:
                 if mass:
                     self._find_mass()
                 
+                if density:
+                    self._find_density()
+                
                 if mp:
                     self._find_mp()
-                    print(self.mp)
 
         except KeyboardInterrupt:
             self.hazards = ["Lol soz my code kinda broke for this one"]
+        
+        self.got_data = True
 
 
 window = MainWindow()
