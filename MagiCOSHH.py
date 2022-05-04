@@ -16,9 +16,11 @@ class SearchBox:
         self.frame.pack(fill=tk.BOTH, padx=2, pady=2)
         self.frame.grid_columnconfigure(0, weight=1)
 
-        self.entry = tk.Text(self.frame, font=("Helvetica", 10), width=10, height=8)
+        self.entry = tk.Text(self.frame, font=(
+            "Helvetica", 10), width=10, height=8)
         self.entry.grid(column=0, row=0, sticky="ew", pady=2, padx=2)
-        self.entry.bind("<Control-Return>", self._button_click)
+        self.entry.bind("<Control-Return>", self._ctrl_enter)
+        self.entry.insert(tk.END, "methanol\nethanol\ndichloromethane")
 
         self.radio_frame = tk.Frame(self.frame)
         self.radio_frame.grid(column=1, row=0)
@@ -27,19 +29,22 @@ class SearchBox:
 
         self.fast_var = tk.BooleanVar()
         self.fast_var.set(True)
-        tk.Radiobutton(self.radio_frame, text="Fast", variable=self.fast_var, value=True).pack()
-        tk.Radiobutton(self.radio_frame, text="Safe", variable=self.fast_var, value=False).pack()
-        
-        tk.Label(self.radio_frame,
-            text="Use safe mode if fast mode is causing the program to freeze for more than ~15 secs",
-            justify=tk.CENTER,
-            wraplength=90,
-            font=(font.nametofont("TkDefaultFont"), 7)
-        ).pack()
+        tk.Radiobutton(self.radio_frame, text="Fast",
+                       variable=self.fast_var, value=True).pack()
+        tk.Radiobutton(self.radio_frame, text="Safe",
+                       variable=self.fast_var, value=False).pack()
 
-        self.button = tk.Button(self.frame, text="Go", command=self._button_click)
+        tk.Label(self.radio_frame,
+                 text="Use safe mode if fast mode is causing the program to freeze for more than ~15 secs",
+                 justify=tk.CENTER,
+                 wraplength=90,
+                 font=(font.nametofont("TkDefaultFont"), 7)
+                 ).pack()
+
+        self.button = tk.Button(self.frame, text="Go",
+                                command=self._button_click)
         self.button.grid(column=2, row=0, sticky="nesw", pady=2, padx=[0, 2])
-    
+
     def get_text(self):
         return self.entry.get("1.0", tk.END)
 
@@ -48,11 +53,20 @@ class SearchBox:
 
         names = parse_text.split("\n")
 
-        return [x for x in names if x] # remove empty rows
+        return [x for x in names if x]  # remove empty rows
+
+    def _ctrl_enter(self, *args, **kwargs):
+        self._button_click()
+
+        # Fix newline being inserted due to ctrl-enter
+        # cursor_index = self.entry.index("insert")
+        # print(cursor_index)
+        # self.entry.delete(float(cursor_index))
 
     def _button_click(self, *args, **kwargs):
         if len(self.get_names()) > 0:
             self.master.search(self.get_names(), fast=self.fast_var.get())
+
 
 class ProgressBar:
     def __init__(self, master):
@@ -61,11 +75,13 @@ class ProgressBar:
         self.frame = tk.Frame(master.root, border=2, relief=tk.GROOVE)
         self.frame.pack(fill=tk.BOTH, padx=2, pady=[0, 2])
 
-        self.bar = ttk.Progressbar(self.frame, orient=tk.HORIZONTAL, length=200, mode="determinate")
+        self.bar = ttk.Progressbar(
+            self.frame, orient=tk.HORIZONTAL, length=200, mode="determinate")
         self.bar.pack(fill=tk.X, padx=[2, 3], pady=[2, 3])
 
     def set(self, value):
         self.bar['value'] = value * 100
+
 
 class OutputBox:
     def __init__(self, master):
@@ -74,14 +90,16 @@ class OutputBox:
         self.frame = tk.Frame(master.root, border=2, relief=tk.GROOVE)
         self.frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=[0, 2])
 
-        self.entry = tk.Text(self.frame, font=("Helvetica", 8), state=tk.DISABLED)
+        self.entry = tk.Text(self.frame, font=(
+            "Helvetica", 8), state=tk.DISABLED)
         self.entry.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
-    
+
     def set(self, text):
         self.entry.configure(state=tk.NORMAL)
         self.entry.delete("1.0", tk.END)
         self.entry.insert(tk.END, text)
         self.entry.configure(state=tk.DISABLED)
+
 
 class MainWindow:
     def __init__(self):
@@ -96,9 +114,8 @@ class MainWindow:
         self.search_box = SearchBox(self)
         self.progress_bar = ProgressBar(self)
         self.output_box = OutputBox(self)
-        
-        self.substances = []
 
+        self.substances = []
 
     def search(self, names, fast=True):
         self.substances = []
@@ -112,19 +129,20 @@ class MainWindow:
             processes = []
 
             for substance in self.substances:
-                processes.append(Thread(target=lambda x=substance: x.get_hazards()))
+                processes.append(
+                    Thread(target=lambda x=substance: x.get_hazards()))
                 processes[-1].start()
 
             for process in processes:
                 process.join()
-        
+
         else:
             for substance in self.substances:
                 substance.get_hazards()
                 self.update()
 
         self.update()
-            
+
     def get_formatted_hazards(self):
         out_str = ""
         num_complete = len(self.substances)
@@ -138,9 +156,9 @@ class MainWindow:
 
             for hazard in substance.hazards:
                 out_str += hazard.strip(" ") + "\n"
-            
+
             out_str += "\n"
-        
+
         return (out_str.strip("\n"), num_complete)
 
     def update(self):
@@ -167,14 +185,14 @@ class Substance:
 
             cid_request = requests.get(
                 "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + self.name.lower() + "/property/Title/JSON")
-            
+
             #print(self.name, cid_request.text)
 
             cid_raw = json.loads(cid_request.text)
 
             if "PropertyTable" in list(cid_raw.keys()):
                 return cid_raw["PropertyTable"]["Properties"][0]["CID"]
-            
+
             elif "Fault" in list(cid_raw.keys()):
                 print(self.name, cid_raw)
 
@@ -199,7 +217,7 @@ class Substance:
                 file.close()
 
             jraw = json.loads(raw)
-        
+
         return jraw
 
     def _find_hazards(self, jraw, strip_warnings=True):
@@ -230,11 +248,13 @@ class Substance:
                             current_hazard = i["String"]
 
                             # Cut out any crap immediately after the hazard number
-                            current_hazard = current_hazard[:4] + ':' + ':'.join(current_hazard.split(":")[1:])
+                            current_hazard = current_hazard[:4] + ':' + \
+                                ':'.join(current_hazard.split(":")[1:])
 
                             # Remove warnings in square brackets at end of each hazard
                             if strip_warnings:
-                                current_hazard = '['.join(current_hazard.split("[")[:-1])
+                                current_hazard = '['.join(
+                                    current_hazard.split("[")[:-1])
 
                             # Don't add if empty
                             if current_hazard.strip() != "":
@@ -243,7 +263,6 @@ class Substance:
                 hazards = sorted(list(dict.fromkeys(hazards)))
 
                 return hazards
-
 
     def _get_hazards(self):
         self.cid = self._get_cid()
@@ -255,7 +274,6 @@ class Substance:
             jraw = self._get_json(write_to_file=False)
 
             return self._find_hazards(jraw)
-
 
     def get_hazards(self):
         self.hazards = self._get_hazards()
