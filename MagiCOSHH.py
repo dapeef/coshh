@@ -20,7 +20,15 @@ class SearchBox:
             "Helvetica", 10), width=10, height=8)
         self.entry.grid(column=0, row=0, sticky="ew", pady=2, padx=2)
         self.entry.bind("<Control-Return>", self._ctrl_enter)
-        self.entry.insert(tk.END, "methanol\nethanol\ndichloromethane")
+        self.entry.insert(tk.END, """methanol\nethanol\ndichloromethane\n30% Bis-acrylamide/acrylamide
+Tris(hydroxymethyl)aminoethane
+Sodium dodecyl sulfate
+Ammonium persulfate
+Tetramethyl ethylene diamine
+Glycine
+Dithiothreitol 
+Perchloric acid
+Phosphoric acid""")
 
         self.radio_frame = tk.Frame(self.frame)
         self.radio_frame.grid(column=1, row=0)
@@ -117,7 +125,7 @@ class MainWindow:
 
         self.substances = []
 
-    def search(self, names, fast=True):
+    def search(self, names, fast=True, hcodes=True, mass=True, density=True, mp=True):
         self.substances = []
 
         for name in names:
@@ -130,7 +138,7 @@ class MainWindow:
 
             for substance in self.substances:
                 processes.append(
-                    Thread(target=lambda x=substance: x.get_hazards()))
+                    Thread(target=lambda x=substance: x.get_data(hcodes=hcodes, mass=mass, density=density, mp=mp)))
                 processes[-1].start()
 
             for process in processes:
@@ -138,31 +146,44 @@ class MainWindow:
 
         else:
             for substance in self.substances:
-                substance.get_hazards()
+                substance.get_data(hcodes=hcodes, mass=mass, density=density, mp=mp)
                 self.update()
 
         self.update()
 
-    def get_formatted_hazards(self):
+    def get_formatted_output(self):
         out_str = ""
         num_complete = len(self.substances)
 
         for substance in self.substances:
             out_str += "\t" + substance.name.capitalize() + ":\n"
+            
+            if substance.mass != None:
+                out_str += " - Molecular Weight: " + substance.mass + "\n"
+            
+            if substance.density != None:
+                out_str += " - Density: " + substance.density + "\n"
+            
+            if substance.mp != None:
+                out_str += " - Melting Point: " + substance.mp + "\n"
 
             if len(substance.hazards) == 0:
                 out_str += "Working..." + "\n"
                 num_complete -= 1
 
-            for hazard in substance.hazards:
-                out_str += hazard.strip(" ") + "\n"
+            else:
+                if substance.hazards != ["Not in PubChem"]:
+                    out_str += " - Hazards:" + "\n"
+
+                for hazard in substance.hazards:
+                    out_str += hazard.strip(" ") + "\n"
 
             out_str += "\n"
 
         return (out_str.strip("\n"), num_complete)
 
     def update(self):
-        (out_str, num_complete) = self.get_formatted_hazards()
+        (out_str, num_complete) = self.get_formatted_output()
 
         self.progress_bar.set(num_complete / len(self.substances))
 
@@ -176,6 +197,10 @@ class Substance:
         self.name = name
 
         self.hazards = []
+        self.mass = None
+        self.mass_units = ""
+        self.density = None
+        self.mp = None
 
     def _get_cid(self):
         too_fast = True
@@ -220,26 +245,32 @@ class Substance:
 
         return jraw
 
-    def _find_hazards(self, jraw, strip_warnings=True):
-        section = jraw["Record"]["Section"]
+    def _find_heading(self, data, heading):
+        index = None
 
-        hazard_index = None
-
-        for i in range(len(section)):
-            if section[i]["TOCHeading"] == "Safety and Hazards":
-                hazard_index = i
+        for i in range(len(data)):
+            if data[i]["TOCHeading"] == heading:
+                index = i
                 break
 
-        if hazard_index == None:
-            return ["No hazard info available on PubChem"]
+        if index != None:
+            return data[index]
+
+    def _find_hazards(self, strip_warnings=True):
+        section = self.jraw["Record"]["Section"]
+
+        safety_and_hazards = self._find_heading(section, "Safety and Hazards")
+
+        if safety_and_hazards == None:
+            self.hazards = ["No hazards found"]
 
         else:
             hazards = []
 
-            section2 = section[hazard_index]["Section"][0]["Section"][0]["Information"]
+            section2 = safety_and_hazards["Section"][0]["Section"][0]["Information"]
 
             if len(section2) < 2:
-                return ["Not classified"]
+                self.hazards = ["No hazards found"]
 
             else:
                 for j in section2:
@@ -262,26 +293,99 @@ class Substance:
 
                 hazards = sorted(list(dict.fromkeys(hazards)))
 
-                return hazards
+                self.hazards = hazards
 
-    def _get_hazards(self):
-        self.cid = self._get_cid()
+    def _find_mass(self):
+        chem_properties = self._find_heading(
+            self.jraw["Record"]["Section"],
+            "Chemical and Physical Properties"
+        )
 
-        if self.cid == None:
-            return ["Not in PubChem"]
+        if chem_properties == None:
+            self.mass = "No data"
 
         else:
-            jraw = self._get_json(write_to_file=False)
+            weight_data = self._find_heading(chem_properties["Section"][0]["Section"], "Molecular Weight")
 
-            return self._find_hazards(jraw)
+            if weight_data == None:
+                self.mass = "No data"
 
-    def get_hazards(self):
-        self.hazards = self._get_hazards()
+            else:
+                value = weight_data["Information"][0]["Value"]
+                self.mass = value["StringWithMarkup"][0]["String"]
+                self.mass_units = value["Unit"]
 
+    def _find_mp(self):
+        chem_properties = self._find_heading(
+            self.jraw["Record"]["Section"],
+            "Chemical and Physical Properties"
+        )
+
+        if chem_properties == None:
+            self.mp = "No data"
+
+        else:
+            experimental_properties = self._find_heading(
+                chem_properties["Section"],
+                "Experimental Properties"
+            )
+            if experimental_properties == None:
+                self.mp = "No data"
+            
+            else:
+                melting_point = self._find_heading(
+                    experimental_properties["Section"],
+                    "Melting Point"
+                )
+
+                if melting_point == None:
+                    self.mp = "No data"
+
+                else:
+                    values = []
+
+                    for info in melting_point["Information"]:
+                        try:
+                            values.append(info["Value"]["StringWithMarkup"][0]["String"])
+                        except KeyError:
+                            pass
+
+                    mp = ""
+
+                    for value in values:
+                        if value[-1].lower() == "c" and len(value) > len(mp):
+                            mp = value
+
+                    if mp == "":
+                        if len(values) > 0:
+                            mp = values[0]
+                        
+                        else:
+                            mp = "No data"
+
+                    self.mp = mp
+
+    def get_data(self, hcodes=True, mass=True, density=True, mp=True):
         try:
-            self.hazards = self._get_hazards()
+            self.cid = self._get_cid()
 
-        except Exception:
+            if self.cid == None:
+                self.hazards = ["Not in PubChem"]
+
+            else:
+                self.jraw = self._get_json(write_to_file=True)
+
+                if hcodes:
+                    self._find_hazards()
+                
+                if mass:
+                    self._find_mass()
+                
+                if mp:
+                    self._find_mp()
+                    print(self.mp)
+
+        except KeyboardInterrupt:
             self.hazards = ["Lol soz my code kinda broke for this one"]
 
 
