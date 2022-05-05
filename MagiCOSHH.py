@@ -22,15 +22,15 @@ class SearchBox:
             "Helvetica", 10), width=10, height=9)
         self.entry.grid(column=0, row=0, sticky="ew", pady=2, padx=2)
         self.entry.bind("<Control-Return>", self._ctrl_enter)
-        self.entry.insert(tk.END, """methanol\nethanol\ndichloromethane\n30% Bis-acrylamide/acrylamide
-Tris(hydroxymethyl)aminoethane
-Sodium dodecyl sulfate
-Ammonium persulfate
-Tetramethyl ethylene diamine
-Glycine
-Dithiothreitol 
-Perchloric acid
-Phosphoric acid""")
+#         self.entry.insert(tk.END, """methanol\nethanol\ndichloromethane\n30% Bis-acrylamide/acrylamide
+# Tris(hydroxymethyl)aminoethane
+# Sodium dodecyl sulfate
+# Ammonium persulfate
+# Tetramethyl ethylene diamine
+# Glycine
+# Dithiothreitol 
+# Perchloric acid
+# Phosphoric acid""")
 
         # Choose which data to be displayed
         self.choice_frame = tk.Frame(self.frame, border=2, relief=tk.GROOVE)
