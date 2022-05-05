@@ -93,7 +93,7 @@ Phosphoric acid""")
 
         names = parse_text.split("\n")
 
-        return [x for x in names if x]  # remove empty rows
+        return [x.strip() for x in names if x]  # remove empty rows
 
     def _ctrl_enter(self, *args, **kwargs):
         self._button_click()
