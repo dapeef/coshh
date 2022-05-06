@@ -8,8 +8,6 @@ from threading import Thread
 from tkinter import font
 
 
-# TODO "no internet connection"
-
 class SearchBox:
     def __init__(self, master):
         self.master = master
@@ -23,15 +21,15 @@ class SearchBox:
             "Helvetica", 10), width=10, height=9)
         self.entry.grid(column=0, row=0, sticky="ew", pady=2, padx=2)
         self.entry.bind("<Control-Return>", self._ctrl_enter)
-        self.entry.insert(tk.END, """methanol\nethanol\ndichloromethane\n30% Bis-acrylamide/acrylamide
-Tris(hydroxymethyl)aminoethane
-Sodium dodecyl sulfate
-Ammonium persulfate
-Tetramethyl ethylene diamine
-Glycine
-Dithiothreitol 
-Perchloric acid
-Phosphoric acid""")
+#         self.entry.insert(tk.END, """methanol\nethanol\ndichloromethane\n30% Bis-acrylamide/acrylamide
+# Tris(hydroxymethyl)aminoethane
+# Sodium dodecyl sulfate
+# Ammonium persulfate
+# Tetramethyl ethylene diamine
+# Glycine
+# Dithiothreitol 
+# Perchloric acid
+# Phosphoric acid""")
 
         # Choose which data to be displayed
         self.choice_frame = tk.Frame(self.frame, border=2, relief=tk.GROOVE)
@@ -55,6 +53,10 @@ Phosphoric acid""")
         self.mp_var = tk.BooleanVar()
         tk.Checkbutton(self.choice_frame, text="Melting Point",
                        variable=self.mp_var).pack(anchor="w")
+                       
+        self.bp_var = tk.BooleanVar()
+        tk.Checkbutton(self.choice_frame, text="Boiling Point",
+                       variable=self.bp_var).pack(anchor="w")
 
         # Search mode (safe vs fast)
         self.radio_frame = tk.Frame(self.frame, border=2, relief=tk.GROOVE)
@@ -90,7 +92,7 @@ Phosphoric acid""")
 
         names = parse_text.split("\n")
 
-        return [x for x in names if x]  # remove empty rows
+        return [x.strip() for x in names if x]  # remove empty rows
 
     def _ctrl_enter(self, *args, **kwargs):
         self._button_click()
@@ -107,7 +109,8 @@ Phosphoric acid""")
                                hcodes=self.hcodes_var.get(),
                                mass=self.mass_var.get(),
                                density=self.density_var.get(),
-                               mp=self.mp_var.get(),)
+                               mp=self.mp_var.get(),
+                               bp=self.bp_var.get())
 
 
 class ProgressBar:
@@ -146,7 +149,7 @@ class OutputBox:
 class MainWindow:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Magic COSHH searcher - Alistair White-Horne")
+        self.root.title("Magic COSHH searcher - Alistair White-Horne - beta - v0.1")
         self.root.geometry(
             str(int(self.root.winfo_screenwidth()/3))
             + "x" +
@@ -159,7 +162,7 @@ class MainWindow:
 
         self.substances = []
 
-    def search(self, names, fast=True, hcodes=True, mass=True, density=True, mp=True):
+    def search(self, names, fast=True, hcodes=True, mass=True, density=True, mp=True, bp=True):
         self.substances = []
 
         for name in names:
@@ -172,7 +175,7 @@ class MainWindow:
 
             for substance in self.substances:
                 processes.append(
-                    Thread(target=lambda x=substance: x.get_data(hcodes=hcodes, mass=mass, density=density, mp=mp)))
+                    Thread(target=lambda x=substance: x.get_data(hcodes=hcodes, mass=mass, density=density, mp=mp, bp=bp)))
                 processes[-1].start()
 
             for process in processes:
@@ -180,8 +183,11 @@ class MainWindow:
 
         else:
             for substance in self.substances:
-                substance.get_data(hcodes=hcodes, mass=mass,
-                                   density=density, mp=mp)
+                substance.get_data(hcodes=hcodes,
+                                   mass=mass,
+                                   density=density,
+                                   mp=mp,
+                                   bp=bp)
                 self.update()
 
         self.update()
@@ -202,13 +208,16 @@ class MainWindow:
 
             else:
                 if substance.mass != None:
-                    out_str += " - Molecular Weight: " + substance.mass + "\n"
+                    out_str += " - Molecular Weight: " + substance.mass + " " + substance.mass_units + "\n"
 
                 if substance.density != None:
                     out_str += " - Density: " + substance.density + "\n"
 
                 if substance.mp != None:
                     out_str += " - Melting Point: " + substance.mp + "\n"
+                    
+                if substance.bp != None:
+                    out_str += " - Boiling Point: " + substance.bp + "\n"
 
                 if substance.hazards != None:
                     out_str += " - Hazards:" + "\n"
@@ -242,6 +251,7 @@ class Substance:
         self.mass_units = ""
         self.density = None
         self.mp = None
+        self.bp = None
 
         self.got_data = False
         self.error = None
@@ -462,7 +472,58 @@ class Substance:
 
                     self.mp = mp
 
-    def get_data(self, hcodes=True, mass=True, density=True, mp=True):
+    def _find_bp(self):
+        chem_properties = self._find_heading(
+            self.jraw["Record"]["Section"],
+            "Chemical and Physical Properties"
+        )
+
+        if chem_properties == None:
+            self.bp = "No data"
+
+        else:
+            experimental_properties = self._find_heading(
+                chem_properties["Section"],
+                "Experimental Properties"
+            )
+            if experimental_properties == None:
+                self.bp = "No data"
+
+            else:
+                melting_point = self._find_heading(
+                    experimental_properties["Section"],
+                    "Boiling Point"
+                )
+
+                if melting_point == None:
+                    self.bp = "No data"
+
+                else:
+                    values = []
+
+                    for info in melting_point["Information"]:
+                        try:
+                            values.append(
+                                info["Value"]["StringWithMarkup"][0]["String"])
+                        except KeyError:
+                            pass
+
+                    bp = ""
+
+                    for value in values:
+                        if value[-1].lower() == "c" and len(value) > len(bp):
+                            bp = value
+
+                    if bp == "":
+                        if len(values) > 0:
+                            bp = values[0]
+
+                        else:
+                            bp = "No data"
+
+                    self.bp = bp
+
+    def get_data(self, hcodes=True, mass=True, density=True, mp=True, bp=True):
         try:
             self.cid = self._get_cid()
 
@@ -483,6 +544,9 @@ class Substance:
 
                 if mp:
                     self._find_mp()
+
+                if bp:
+                    self._find_bp()
 
         except requests.exceptions.ConnectionError:
             self.error = "No stable internet connection"
