@@ -8,7 +8,6 @@ from threading import Thread
 from tkinter import font
 
 
-
 class SearchBox:
     def __init__(self, master):
         self.master = master
