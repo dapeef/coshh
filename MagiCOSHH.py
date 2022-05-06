@@ -209,7 +209,7 @@ class MainWindow:
 
             else:
                 if substance.mass != None:
-                    out_str += " - Molecular Weight: " + substance.mass + "\n"
+                    out_str += " - Molecular Weight: " + substance.mass + " " + substance.mass_units + "\n"
 
                 if substance.density != None:
                     out_str += " - Density: " + substance.density + "\n"
