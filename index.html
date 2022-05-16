@@ -1,1 +1,93 @@
-<h1>Wag wan</h1>
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <style>
+            h1 {
+                text-align: center;
+                color: white;
+            }
+            Label {
+                color: white;
+            }
+
+            body {
+                background-color: rgb(44, 44, 44);
+                align-items: center;            
+            }
+
+            .horiz_container {
+                margin: auto;
+                display: grid;
+                grid-gap: 10px;
+                width: 90%;
+                max-width: 25cm;
+            }
+
+            .border {
+                padding: 5px;
+                border: 1px solid black;
+                border-radius: 5px;
+            }
+
+            .search_columns {
+                grid-template-columns: 1fr auto 70px;
+            }
+
+            .search_title {
+                margin-bottom: 2px;
+                font-size: large;
+            }
+
+            .search_options {
+                font-size: small;
+            }
+
+            .progress_bar {
+                margin: auto;
+                display: grid;
+                width: 90%;
+                max-width: 25cm;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>COSHH magic</h1>
+        <div class="horiz_container search_columns border">
+            <textarea id="text_in" style="border-radius: 5px;"></textarea>
+            <div class="border">
+                <label class="search_title">Display:</label>
+                <div>
+                    <div>
+                        <input type="checkbox" id="hazards" name="hazards" checked>
+                        <label for="hazards" class="search_options">Hazards</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="mass" name="mass" unchecked>
+                        <label for="mass" class="search_options">Molecular weight</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="density" name="density" unchecked>
+                        <label for="density" class="search_options">Density</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="mp" name="mp" unchecked>
+                        <label for="mp" class="search_options">Melting Point</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="bp" name="bp" unchecked>
+                        <label for="bp" class="search_options">Boiling Point</label>
+                    </div>
+                </div>
+            </div>
+            <button type="submit">Go!</button>
+        </div>
+
+        <progress id="progress" max="100" value="70" class="progress_bar"></progress>
+
+        <div class="border">
+            <label>poopoo</label>
+        </div>
+    </body>
+</html>
