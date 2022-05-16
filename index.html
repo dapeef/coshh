@@ -17,18 +17,19 @@
                 align-items: center;            
             }
 
-            .horiz_container {
-                margin: auto;
-                display: grid;
-                grid-gap: 10px;
-                width: 90%;
-                max-width: 25cm;
+            .border {
+                padding: 2mm;
+                border: 1px solid white;
+                border-radius: 2mm;
             }
 
-            .border {
-                padding: 5px;
-                border: 1px solid black;
-                border-radius: 5px;
+            .main_frame {
+                margin: auto;
+                display: grid;
+                grid-gap: 2mm;
+                width: 90%;
+                max-width: 25cm;
+                border-radius: 4mm;
             }
 
             .search_columns {
@@ -55,8 +56,8 @@
 
     <body>
         <h1>COSHH magic</h1>
-        <div class="horiz_container search_columns border">
-            <textarea id="text_in" style="border-radius: 5px;"></textarea>
+        <div class="main_frame border search_columns">
+            <textarea id="text_in" style="border-radius: 2mm;"></textarea>
             <div class="border">
                 <label class="search_title">Display:</label>
                 <div>
@@ -91,7 +92,7 @@
 
         <progress id="progress" max="100" value="70" class="progress_bar"></progress>
 
-        <div class="horiz_container border">
+        <div class="border main_frame">
             <label>Output goes here. Eg:
 
     TFA:
