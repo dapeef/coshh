@@ -3,18 +3,16 @@
 <html>
     <head>
         <style>
-            h1 {
-                text-align: center;
-                color: white;
-            }
-            Label {
-                color: white;
-                white-space: pre-wrap;
-            }
-
             body {
                 background-color: rgb(44, 44, 44);
-                align-items: center;            
+                align-items: center;
+                color: white;
+                font-size: medium;
+                font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            }
+
+            h1 {
+                text-align: center;
             }
 
             button {
@@ -22,18 +20,14 @@
                 color: white;
                 border-radius: 2mm;
                 transition-duration: 0.3s;
-            }
-            button:hover {
-                background-color: lightgreen;
-                color: black;
-                font-style: italic;
+                font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
             }
 
             textarea {
                 background-color: rgba(255, 255, 255, 0);
                 color: white;
                 resize: vertical;
-                min-height: min-content;
+                min-height: initial;
             }
             textarea::placeholder {
                 color: rgb(124, 124, 124);
@@ -71,6 +65,64 @@
 
             .output_text {
                 font-size: medium;
+            }
+            
+            .go_button {
+                font-size: x-large;
+            }
+            .go_button:hover {
+                background-color: lightgreen;
+                color: black;
+            }
+
+            .collapsible_container {
+                background-color: rgba(255, 255, 255, 0);
+                border: 0 solid white;
+                border-radius: 2mm;
+                padding: 0;
+                text-align: left;
+                transition-duration: 0.3s;
+            }
+
+            .collapsible {
+                background-color: rgba(255, 255, 255, 0);
+                border: 1px solid white;
+                border-radius: 2mm;
+                text-align: left;
+                transition-duration: 0.3s;
+                padding: 2mm;
+                font-size: large;
+                width: 100%;
+            }
+            .collapsible:hover {
+                background-color: white;
+                color: black;
+                font-weight: bold;
+            }
+            .collapsible_active {
+                background-color: rgb(27, 27, 27);
+                font-weight: bold;
+            }
+
+            .collapsible_content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.2s ease-in-out;
+                font-weight: normal;
+                font-size: small;
+            }
+
+            .mini_header {
+                /* font-style: italic; */
+                margin-top: 4mm;
+                font-size: medium;
+                font-weight: bold;
+            }
+
+            .multiline {
+                white-space: pre-wrap;
+                margin-top: 1mm;
+                word-wrap: break-word;
             }
         </style>
     </head>
@@ -110,29 +162,60 @@
                     </div>
                 </div>
             </div>
-            <button type="submit" class="border">Go!</button>
+            <button type="button" class="border go_button">Go!</button>
         </div>
         <div class="border main_frame" style="padding-top: 1mm; padding-bottom: 1mm;">
-            <progress id="progress" max="100" value="70" class="progress_bar"></progress>
+            <progress id="progress" max="100" value="69" class="progress_bar"></progress>
         </div>
 
         <div class="border main_frame output_text">
-            <label>Output goes here. Eg:
-
-    TFA:
-- Main hazards:
-H314: Causes severe skin burns and eye damage
+            <div class="collapsible_container">
+                <button class="collapsible">TFA</button>
+                <div class="collapsible_content">
+                    <!-- <div class="mini_header">Molecular Weight: 114.02</div>
+                    <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
+                    <div class="mini_header">Melting Point: -15.2 °C</div>
+                    <div class="mini_header">Boiling Point: 73.0 °C</div> -->
+                    <div class="mini_header">Main hazards:</div>
+                    <div class="multiline">H314: Causes severe skin burns and eye damage
 H332: Harmful if inhaled
-H412: Harmful to aquatic life with long lasting effects
-- Other hazards:
-H290: May be corrosive to metals
+H412: Harmful to aquatic life with long lasting effects</div>
+                    <div class="mini_header">Extra hazards:</div>
+                    <div class="multiline">H290: May be corrosive to metals
 H301: Toxic if swallowed
 H302: Harmful if swallowed
 H315: Causes skin irritation
 H318: Causes serious eye damage
 H319: Causes serious eye irritation
 H331: Toxic if inhaled
-H335: May cause respiratory irritation</label>
+H335: May cause respiratory irritation</div>
+                </div>
+            </div>
+
+            <div class="collapsible_container">
+                <button class="collapsible">Methanol</button>
+                <div class="collapsible_content">
+                    <!-- <div class="mini_header">Molecular Weight: 114.02</div>
+                    <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
+                    <div class="mini_header">Melting Point: -15.2 °C</div>
+                    <div class="mini_header">Boiling Point: 73.0 °C</div> -->
+                    <div class="mini_header">Main hazards:</div>
+                    <div class="multiline">H225: Highly Flammable liquid and vapor
+H301: Toxic if swallowed
+H302: Harmful if swallowed
+H303: May be harmful if swallowed</div>
+                    <div class="mini_header">Extra hazards:</div>
+                    <div class="multiline">
+H311: Toxic in contact with skin
+H319: Causes serious eye irritation
+H331: Toxic if inhaled
+H335: May cause respiratory irritation
+H336: May cause drowsiness or dizziness
+H360: May damage fertility or the unborn child
+H370: Causes damage to organs
+H372: Causes damage to organs through prolonged or repeated exposure</div>
+                </div>
+            </div>
         </div>
 
         <script src="folding_output.js"></script>
