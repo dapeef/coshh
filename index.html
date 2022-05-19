@@ -19,7 +19,7 @@
                 background-color: rgba(255, 255, 255, 0);
                 color: white;
                 border-radius: 2mm;
-                transition-duration: 0.3s;
+                transition: all 0.3s;
                 font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
             }
 
@@ -75,13 +75,20 @@
                 color: black;
             }
 
+            .button_status {
+                font-size: small;
+                max-height: 0;
+                opacity: 0;
+                transition: max-height .3s, opacity .3s;
+            }
+
             .collapsible_container {
                 background-color: rgba(255, 255, 255, 0);
                 border: 0 solid white;
                 border-radius: 2mm;
                 padding: 0;
                 text-align: left;
-                transition-duration: 0.3s;
+                transition-duration: 0.25s;
             }
 
             .collapsible {
@@ -107,7 +114,7 @@
             .collapsible_content {
                 max-height: 0;
                 overflow: hidden;
-                transition: max-height 0.2s ease-in-out;
+                transition: max-height 0.25s ease-in-out;
                 font-weight: normal;
                 font-size: small;
             }
@@ -162,7 +169,10 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="border go_button">Go!</button>
+            <button id="go_button" type="button" class="border go_button">
+                Go!
+                <div id="button_status" class="button_status">Running...</div>
+            </button>
         </div>
         <div class="border main_frame" style="padding-top: 1mm; padding-bottom: 1mm;">
             <progress id="progress" max="100" value="69" class="progress_bar"></progress>
@@ -218,5 +228,6 @@ H372: Causes damage to organs through prolonged or repeated exposure</div>
         </div>
 
         <script src="folding_output.js"></script>
+        <script src="search.js"></script>
     </body>
 </html>
