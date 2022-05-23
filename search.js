@@ -112,7 +112,7 @@ class Substance {
             .then(data => {
                 this.jraw = data
 
-
+                this._parse_json()
             })
             .catch(error => {
                 console.log("When searching for " + this.name + " (CID: " + this.cid + "), got " + error);
@@ -121,7 +121,16 @@ class Substance {
     }
 
     _parse_json() {
-        
+        this.status = "Processing data..."
+        this._update_ui();
+
+        function get_by_heading(jraw, value, variable_name="TOCHeading", multiple_results=false) {
+            console.log(variable_name)
+        }
+
+        let relevant = this.jraw["Record"]["Section"]
+
+        get_by_heading(relevant, "Safety and Hazards")
     }
 }
 
