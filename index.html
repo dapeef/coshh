@@ -119,6 +119,16 @@
                 font-size: small;
             }
 
+            .dictated_name {
+                font-size: medium;
+                font-weight: normal;
+            }
+
+            .output_status {
+                font-size: small;
+                font-weight: normal;
+            }
+
             .mini_header {
                 /* font-style: italic; */
                 margin-top: 4mm;
@@ -137,7 +147,8 @@
     <body>
         <h1>COSHH magic</h1>
         <div class="main_frame border search_columns">
-            <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="border-radius: 2mm;"></textarea>
+            <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="border-radius: 2mm;">methanol
+wee</textarea>
             <div class="border">
                 <div style="margin-bottom: 2mm">
                     <label style="font-size: large;">Display:</label>
@@ -178,9 +189,17 @@
             <progress id="progress" max="100" value="69" class="progress_bar"></progress>
         </div>
 
-        <div class="border main_frame output_text">
+        <div id="output_container" class="border main_frame output_text">
             <div class="collapsible_container">
-                <button class="collapsible">TFA</button>
+                <button class="collapsible">
+                    TFA
+                    <div class="dictated_name">
+                        (Trifluoroacetic acid)
+                    </div>
+                    <div class="output_status">
+                        Status...
+                    </div>
+                </button>
                 <div class="collapsible_content">
                     <!-- <div class="mini_header">Molecular Weight: 114.02</div>
                     <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
