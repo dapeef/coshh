@@ -13,6 +13,9 @@ const text_in = document.getElementById("text_in")
 const output_container = document.getElementById("output_container")
 
 
+let substances = [];
+
+
 class Substance {
     constructor(name, hazards, extra_hazards, mass, density, mp, bp) {
         this.searched_name = name;
@@ -37,7 +40,14 @@ class Substance {
     }
 
     destroy() {
-        
+        this.UI.container.remove();
+    }
+
+
+    fold_up() {
+        if (this.UI.button.classList.contains("collapsible_active")) {
+            this.UI.button.click();
+        }
     }
 
 
@@ -59,12 +69,12 @@ class Substance {
 
         // container
         this.UI.container = document.createElement("div");
-        this.UI.container.classList.add(["collapsible_container"]);
+        this.UI.container.classList.add("collapsible_container");
 
 
         // button
         this.UI.button = document.createElement("button");
-        this.UI.button.classList.add(["collapsible"]);
+        this.UI.button.classList.add("collapsible");
         this.UI.button.addEventListener("click", on_collapsible_click);
 
         // searched name
@@ -95,7 +105,7 @@ class Substance {
 
         // extra hazards
         if (this.need_extra_hazards) {
-            [this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_text_div("Main Hazards", "mini_header");
+            [this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_text_div("Extra Hazards", "mini_header");
             this.UI.content.appendChild(this.UI.extra_hazards_title);
 
             [this.UI.extra_hazards, this.UI.extra_hazards_text] = add_text_div("[Extra hazards place holder]", "multiline");
@@ -113,12 +123,22 @@ class Substance {
 
     _update_ui() {
         console.log("UI update!")
+
         this.UI.name.nodeValue = this.searched_name;
+
         this.UI.dictated_name_text.nodeValue = "(" + this.name + ")";
-        this.UI.status_text.nodeValue = this.status;
+
+        if (this.status.length == 0) {
+            this.UI.status.style.maxHeight = 0;
+        } else {
+            this.UI.status_text.nodeValue = this.status;
+            this.UI.status.style.maxHeight = this.UI.status.scrollHeight + "px";
+        }
+
         if (this.need_hazards) {
             this.UI.main_hazards_text.nodeValue = this.format_hazards(this.hazards);
         }
+
         if (this.need_extra_hazards) {
             this.UI.extra_hazards_text.nodeValue = this.format_hazards(this.extra_hazards);
         }
@@ -222,6 +242,7 @@ class Substance {
             }
         }
 
+        //#region Hazards
         function get_hazards_from_object(hazard_object) {
             let hazard_frames = hazard_object["Value"]["StringWithMarkup"];
             let hazards = [];
@@ -245,38 +266,45 @@ class Substance {
             return unique;
         }
 
-        let relevant = this.jraw["Record"]["Section"];
-        relevant = get_by_heading(relevant, "Safety and Hazards")["Section"];
-        relevant = get_by_heading(relevant, "Hazards Identification")["Section"];
-        relevant = get_by_heading(relevant, "GHS Classification")["Information"];
-        let hazard_objects = get_by_heading(relevant, "GHS Hazard Statements", "Name", true);
-
-        // Get main hazard set
-        this.hazards = get_hazards_from_object(hazard_objects[0]);
-        
-        // Get all hazards
-        this.all_hazards = [];
-        for (let i = 0; i < hazard_objects.length; i++) {
-            this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i]));
-        }
-
-        // Filter hazards
-        for (let i = 0; i < this.all_hazards.length; i++) {
-            if (is_unique(this.all_hazards[i], this.extra_hazards)) {
-                this.extra_hazards.push(this.all_hazards[i]);
-            }
-        }
-
-        console.log(this.hazards)
-        console.log(this.extra_hazards)
-
         try {
+            let relevant = this.jraw["Record"]["Section"];
+            relevant = get_by_heading(relevant, "Safety and Hazards")["Section"];
+            relevant = get_by_heading(relevant, "Hazards Identification")["Section"];
+            relevant = get_by_heading(relevant, "GHS Classification")["Information"];
+            let hazard_objects = get_by_heading(relevant, "GHS Hazard Statements", "Name", true);
+
+            // Get main hazard set
+            this.hazards = get_hazards_from_object(hazard_objects[0]);
             
+            // Get all hazards
+            this.all_hazards = [];
+            for (let i = 0; i < hazard_objects.length; i++) {
+                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i]));
+            }
+
+            // Filter hazards
+            for (let i = 0; i < this.all_hazards.length; i++) {
+                if (is_unique(this.all_hazards[i], this.extra_hazards.concat(this.hazards))) {
+                    this.extra_hazards.push(this.all_hazards[i]);
+                }
+            }
+
+            if (this.extra_hazards.length == 0) {
+                this.extra_hazards = ["No other hazards"]
+            }
+
+            console.log(this.hazards);
+            console.log(this.extra_hazards);            
         } catch (error) {
-            console.log("Error while finding hazards: ")
-            this.error = "No hazard data available"
+            console.log("Error while finding hazards: ");
+            this.error = "No hazard data available";
+            this.hazards = ["No hazard data available"];
+            this.extra_hazards = ["No hazard data available"];
         }
-        this._update_ui()
+        //#endregion
+
+        this.status = "";
+        this._update_ui();
     }
 }
 
@@ -307,9 +335,11 @@ function on_collapsible_click() {
 function search(names) {
     console.log("Started search with: " + names);
 
-    console.log(hazards_checkbox.checked)
+    for (let i = 0; i < substances.length; i++) {
+        substances[i].destroy();
+    }
 
-    let substances = [];
+    substances = [];
 
     for (let i = 0; i < names.length; i++) {
         let substance = new Substance(
@@ -322,9 +352,9 @@ function search(names) {
             bp_checkbox.checked
         );
 
-        substance.get_data()
+        substance.get_data();
 
-        substances.push(substance)
+        substances.push(substance);
     }
 }
 
