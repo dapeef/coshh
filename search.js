@@ -40,7 +40,11 @@ class Substance {
     }
 
     destroy() {
-        this.UI.container.remove();
+        this.UI.container.style.opacity = 0;
+
+        setTimeout(function(UI) {
+            UI.container.remove();
+        }, 500, this.UI);
     }
 
 
@@ -70,6 +74,10 @@ class Substance {
         // container
         this.UI.container = document.createElement("div");
         this.UI.container.classList.add("collapsible_container");
+
+        setTimeout(function(UI) {
+            UI.container.style.opacity = 1;
+        }, 0, this.UI);
 
 
         // button
@@ -111,7 +119,6 @@ class Substance {
             [this.UI.extra_hazards, this.UI.extra_hazards_text] = add_text_div("[Extra hazards place holder]", "multiline");
             this.UI.content.appendChild(this.UI.extra_hazards);
         }
-
 
         // add button and content to container
         this.UI.container.appendChild(this.UI.button)
@@ -335,10 +342,6 @@ function on_collapsible_click() {
 function search(names) {
     console.log("Started search with: " + names);
 
-    for (let i = 0; i < substances.length; i++) {
-        substances[i].destroy();
-    }
-
     substances = [];
 
     for (let i = 0; i < names.length; i++) {
@@ -369,10 +372,16 @@ function get_names() {
 
 button.addEventListener("click", function() {
     console.log("lol you just pressed \"Go!\" didn't you?");
-    progress.value = 0;
+    //progress.value = 0;
     button_status.style.maxHeight = button_status.scrollHeight + "px";
     button_status.style.opacity = "1";
     button.style.backgroundColor = "blue";
 
-    search(get_names());
+    for (let i = 0; i < substances.length; i++) {
+        substances[i].destroy();
+    }
+    
+    setTimeout(function() {
+        search(get_names());
+    }, 500);
 });

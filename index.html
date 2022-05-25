@@ -7,12 +7,18 @@
         </title>
         
         <style>
+            html {
+                height: 100%;
+            }
+
             body {
                 background-color: rgb(44, 44, 44);
                 align-items: center;
                 color: white;
                 font-size: medium;
                 font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                height: 100%;
+                margin: 0;
             }
 
             h1 {
@@ -40,6 +46,15 @@
             progress {
                 width: auto;
             }
+
+            .box {
+                display: flex;
+                flex-flow: column;
+                height: 100%;
+                margin: auto;
+                width: 90%;
+                max-width: 25cm;
+            }
             
             .border {
                 padding: 2mm;
@@ -50,13 +65,13 @@
             .main_frame {
                 margin-left: auto;
                 margin-right: auto;
-                margin-top: 2mm;
+                margin-top: 0;
                 margin-bottom: 2mm;
                 display: grid;
                 grid-gap: 2mm;
-                width: 90%;
-                max-width: 25cm;
                 border-radius: 4mm;
+                width: calc(100% - 4mm);
+                flex: 0 1 auto;
             }
 
             .search_columns {
@@ -71,6 +86,9 @@
                 overflow: hidden;
                 padding: 0;
                 height: 500px;
+                width: 100%;
+                flex: 1 1 auto;
+                margin-bottom: 1cm;
             }
             .output_container {
                 font-size: medium;
@@ -99,7 +117,8 @@
                 padding: 0;
                 margin: 2mm;
                 text-align: left;
-                transition-duration: 0.25s;
+                opacity: 0; 
+                transition: padding 0.25s, border 0.25s, opacity 0.5s;
             }
 
             .collapsible {
@@ -139,7 +158,8 @@
                 font-size: small;
                 font-weight: normal;
                 overflow: hidden;
-                transition: max-height 0.5s;
+                max-height: 0;
+                transition: max-height 0.25s;
             }
 
             .mini_header {
@@ -158,107 +178,109 @@
     </head>
 
     <body>
-        <h1>COSHH magic</h1>
-        <div class="main_frame border search_columns">
-            <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="border-radius: 2mm;">methanol
+        <div class="box">
+            <h1>COSHH magic</h1>
+            <div class="main_frame border search_columns">
+                <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="border-radius: 2mm;">methanol
 gobbledegook</textarea>
-            <div class="border">
-                <div style="margin-bottom: 2mm">
-                    <label style="font-size: large;">Display:</label>
+                <div class="border">
+                    <div style="margin-bottom: 2mm">
+                        <label style="font-size: large;">Display:</label>
+                    </div>
+                    <div>
+                        <div>
+                            <input type="checkbox" id="hazards" name="hazards" checked>
+                            <label for="hazards" class="search_options">Main hazards</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="extra_hazards" name="extra_hazards" unchecked>
+                            <label for="extra_hazards" class="search_options">Extra hazards</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="mass" name="mass" unchecked>
+                            <label for="mass" class="search_options">Molecular weight</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="density" name="density" unchecked>
+                            <label for="density" class="search_options">Density</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="mp" name="mp" unchecked>
+                            <label for="mp" class="search_options">Melting Point</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="bp" name="bp" unchecked>
+                            <label for="bp" class="search_options">Boiling Point</label>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div>
-                        <input type="checkbox" id="hazards" name="hazards" checked>
-                        <label for="hazards" class="search_options">Main hazards</label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="extra_hazards" name="extra_hazards" unchecked>
-                        <label for="extra_hazards" class="search_options">Extra hazards</label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="mass" name="mass" unchecked>
-                        <label for="mass" class="search_options">Molecular weight</label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="density" name="density" unchecked>
-                        <label for="density" class="search_options">Density</label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="mp" name="mp" unchecked>
-                        <label for="mp" class="search_options">Melting Point</label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="bp" name="bp" unchecked>
-                        <label for="bp" class="search_options">Boiling Point</label>
-                    </div>
-                </div>
+                <button id="go_button" type="button" class="border go_button">
+                    Go!
+                    <div id="button_status" class="button_status">Running...</div>
+                </button>
             </div>
-            <button id="go_button" type="button" class="border go_button">
-                Go!
-                <div id="button_status" class="button_status">Running...</div>
-            </button>
-        </div>
 
-        <div class="border main_frame" style="padding-top: 1mm; padding-bottom: 1mm;">
-            <progress id="progress" max="100" value="69" class="progress_bar"></progress>
-        </div>
+            <!-- <div class="border main_frame" style="padding-top: 1mm; padding-bottom: 1mm;">
+                <progress id="progress" max="100" value="69" class="progress_bar"></progress>
+            </div> -->
 
-        <div class="output_container_outer border main_frame">
-            <div id="output_container" class="output_container">
-                <!-- <div class="collapsible_container">
-                    <button class="collapsible">
-                        TFA
-                        <div class="dictated_name">
-                            (Trifluoroacetic acid)
+            <div class="output_container_outer border main_frame">
+                <div id="output_container" class="output_container">
+                    <!-- <div class="collapsible_container">
+                        <button class="collapsible">
+                            TFA
+                            <div class="dictated_name">
+                                (Trifluoroacetic acid)
+                            </div>
+                            <div class="output_status">
+                                Status...
+                            </div>
+                        </button>
+                        <div class="collapsible_content">
+                            <div class="mini_header">Molecular Weight: 114.02</div>
+                            <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
+                            <div class="mini_header">Melting Point: -15.2 °C</div>
+                            <div class="mini_header">Boiling Point: 73.0 °C</div>
+                            <div class="mini_header">Main hazards:</div>
+                            <div class="multiline">H314: Causes severe skin burns and eye damage
+        H332: Harmful if inhaled
+        H412: Harmful to aquatic life with long lasting effects</div>
+                            <div class="mini_header">Extra hazards:</div>
+                            <div class="multiline">H290: May be corrosive to metals
+        H301: Toxic if swallowed
+        H302: Harmful if swallowed
+        H315: Causes skin irritation
+        H318: Causes serious eye damage
+        H319: Causes serious eye irritation
+        H331: Toxic if inhaled
+        H335: May cause respiratory irritation</div>
                         </div>
-                        <div class="output_status">
-                            Status...
-                        </div>
-                    </button>
-                    <div class="collapsible_content">
-                        <div class="mini_header">Molecular Weight: 114.02</div>
-                        <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
-                        <div class="mini_header">Melting Point: -15.2 °C</div>
-                        <div class="mini_header">Boiling Point: 73.0 °C</div>
-                        <div class="mini_header">Main hazards:</div>
-                        <div class="multiline">H314: Causes severe skin burns and eye damage
-    H332: Harmful if inhaled
-    H412: Harmful to aquatic life with long lasting effects</div>
-                        <div class="mini_header">Extra hazards:</div>
-                        <div class="multiline">H290: May be corrosive to metals
-    H301: Toxic if swallowed
-    H302: Harmful if swallowed
-    H315: Causes skin irritation
-    H318: Causes serious eye damage
-    H319: Causes serious eye irritation
-    H331: Toxic if inhaled
-    H335: May cause respiratory irritation</div>
                     </div>
+
+                    <div class="collapsible_container">
+                        <button class="collapsible">Methanol</button>
+                        <div class="collapsible_content">
+                            <div class="mini_header">Molecular Weight: 114.02</div>
+                            <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
+                            <div class="mini_header">Melting Point: -15.2 °C</div>
+                            <div class="mini_header">Boiling Point: 73.0 °C</div>
+                            <div class="mini_header">Main hazards:</div>
+                            <div class="multiline">H225: Highly Flammable liquid and vapor
+        H301: Toxic if swallowed
+        H311: Toxic in contact with skin
+        H331: Toxic if inhaled
+        H370: Causes damage to organs</div>
+                            <div class="mini_header">Extra hazards:</div>
+                            <div class="multiline">H302: Harmful if swallowed
+        H303: May be harmful if swallowed
+        H319: Causes serious eye irritation
+        H335: May cause respiratory irritation
+        H336: May cause drowsiness or dizziness
+        H360: May damage fertility or the unborn child
+        H372: Causes damage to organs through prolonged or repeated exposure</div>
+                        </div>
+                    </div> -->
                 </div>
-
-                <div class="collapsible_container">
-                    <button class="collapsible">Methanol</button>
-                    <div class="collapsible_content">
-                        <div class="mini_header">Molecular Weight: 114.02</div>
-                        <div class="mini_header">Density: Relative density (water = 1): 1.5</div>
-                        <div class="mini_header">Melting Point: -15.2 °C</div>
-                        <div class="mini_header">Boiling Point: 73.0 °C</div>
-                        <div class="mini_header">Main hazards:</div>
-                        <div class="multiline">H225: Highly Flammable liquid and vapor
-    H301: Toxic if swallowed
-    H311: Toxic in contact with skin
-    H331: Toxic if inhaled
-    H370: Causes damage to organs</div>
-                        <div class="mini_header">Extra hazards:</div>
-                        <div class="multiline">H302: Harmful if swallowed
-    H303: May be harmful if swallowed
-    H319: Causes serious eye irritation
-    H335: May cause respiratory irritation
-    H336: May cause drowsiness or dizziness
-    H360: May damage fertility or the unborn child
-    H372: Causes damage to organs through prolonged or repeated exposure</div>
-                    </div>
-                </div> -->
             </div>
         </div>
 
