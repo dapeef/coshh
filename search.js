@@ -1,10 +1,10 @@
 const hazards_checkbox = document.getElementById("hazards")
 const extra_hazards_checkbox = document.getElementById("extra_hazards")
+const hazard_brackets = document.getElementById("hazard_brackets")
 const mass_checkbox = document.getElementById("mass")
 const density_checkbox = document.getElementById("density")
 const mp_checkbox = document.getElementById("mp")
 const bp_checkbox = document.getElementById("bp")
-
 
 const button = document.getElementById("go_button")
 const button_status = document.getElementById("button_status")
@@ -20,7 +20,7 @@ let substances = [];
 
 
 class Substance {
-    constructor(name, hazards, extra_hazards, mass, density, mp, bp) {
+    constructor(name, hazards, extra_hazards, hazard_brackets, mass, density, mp, bp) {
         this.searched_name = name;
         this.name = "";
         this.cid = null;
@@ -28,6 +28,7 @@ class Substance {
 
         this.need_hazards = hazards;
         this.need_extra_hazards = extra_hazards;
+        this.need_hazard_brackets = hazard_brackets;
         this.need_mass = mass;
         this.need_density = density;
         this.need_mp = mp;
@@ -355,12 +356,18 @@ class Substance {
         }
 
         //#region Hazards
-        function get_hazards_from_object(hazard_object) {
+        function get_hazards_from_object(hazard_object, need_hazard_brackets) {
             let hazard_frames = hazard_object["Value"]["StringWithMarkup"];
             let hazards = [];
 
             for (let j = 0; j < hazard_frames.length; j++) {
-                hazards.push(hazard_frames[j]["String"]);
+                let hazard = hazard_frames[j]["String"];
+
+                if (!need_hazard_brackets) {
+                    hazard = hazard.split("[")[0].trim();
+                }
+
+                hazards.push(hazard);
             }
 
             return hazards;
@@ -386,15 +393,15 @@ class Substance {
             let hazard_objects = get_by_heading(relevant, "GHS Hazard Statements", "Name", true);
 
             // Get main hazard set
-            this.hazards = get_hazards_from_object(hazard_objects[0]);
+            this.hazards = get_hazards_from_object(hazard_objects[0], this.need_hazard_brackets);
             
             // Get all hazards
             this.all_hazards = [];
             for (let i = 0; i < hazard_objects.length; i++) {
-                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i]));
+                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i], this.need_hazard_brackets));
             }
 
-            // Filter hazards
+            // Filter all hazards to get extra hazards
             for (let i = 0; i < this.all_hazards.length; i++) {
                 if (is_unique(this.all_hazards[i], this.extra_hazards.concat(this.hazards))) {
                     this.extra_hazards.push(this.all_hazards[i]);
@@ -432,14 +439,6 @@ class Substance {
             relevant = get_by_heading(relevant, "Experimental Properties")["Section"];
             relevant = get_by_heading(relevant, "Density")["Information"];
 
-            // let densities = [];
-
-            // for (let i = 0; i < relevant.length; i++) {
-            //     densities.push(relevant[i]["Value"]["StringWithMarkup"][0]["String"]);
-            // }
-
-            // console.log(densities);
-
             this.density = relevant[0]["Value"]["StringWithMarkup"][0]["String"]
         } catch (error) {
             console.log("Error while finding relative density: " + error);
@@ -455,7 +454,7 @@ class Substance {
 
             this.mp = relevant[0]["Value"]["StringWithMarkup"][0]["String"]
         } catch (error) {
-            console.log("Error while finding relative melting point: " + error);
+            console.log("Error while finding melting point: " + error);
         }
         //#endregion
         
@@ -468,7 +467,7 @@ class Substance {
 
             this.bp = relevant[0]["Value"]["StringWithMarkup"][0]["String"]
         } catch (error) {
-            console.log("Error while finding relative boiling point: " + error);
+            console.log("Error while finding boiling point: " + error);
         }
         //#endregion
 
@@ -491,6 +490,7 @@ function search(names) {
             names[i],
             hazards_checkbox.checked,
             extra_hazards_checkbox.checked,
+            hazard_brackets.checked,
             mass_checkbox.checked,
             density_checkbox.checked,
             mp_checkbox.checked,
