@@ -15,10 +15,8 @@ const output_container = document.getElementById("output_container")
 
 // TODO double clicking go button
 // TODO go button formatting
-// TODO ctrl-enter
 // TODO other chemical properties
 // TODO search box scroll bar?
-// TODO failed/pending substances unopenable
 
 let substances = [];
 
@@ -399,4 +397,9 @@ button.addEventListener("click", function() {
         button.disabled = false;
     }, 500);
 });
+
+$("#text_in").keypress(function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.keyCode == 13 || e.keyCode == 10)) {
+        button.click()
+    }
 });
