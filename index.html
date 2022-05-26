@@ -37,8 +37,13 @@
             textarea {
                 background-color: rgba(255, 255, 255, 0);
                 color: white;
-                resize: vertical;
-                min-height: initial;
+                resize: none;
+                width: calc(100% - 4mm);
+                height: calc(100% - 4mm);
+                font: inherit;
+                border: 0;
+                padding: 2mm;
+                border-radius: 2mm;
             }
             textarea::placeholder {
                 color: rgb(124, 124, 124);
@@ -87,6 +92,11 @@
 
             .search_columns {
                 grid-template-columns: 1fr auto 2cm;
+            }
+
+            .text_area_outer {
+                overflow: hidden;
+                padding: 0;
             }
 
             .search_options {
@@ -194,8 +204,10 @@
         <div class="box">
             <h1>COSHH magic</h1>
             <div class="main_frame border search_columns">
-                <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="font: inherit;">methanol
+                <div class="text_area_outer border">
+                    <textarea id="text_in" placeholder="Paste/type chemical names here...">methanol
 gobbledegook</textarea>
+                </div>
                 <div class="border">
                     <div style="margin-bottom: 2mm">
                         <label style="font-size: large;">Display:</label>

@@ -13,8 +13,7 @@ const text_in = document.getElementById("text_in")
 const output_container = document.getElementById("output_container")
 
 
-// TODO search box scroll bar?
-// TODO format searched_name
+// TODO format searched_name?
 
 
 let substances = [];
