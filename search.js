@@ -214,14 +214,13 @@ class Substance {
         }
 
 
-        this.UI.main_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification";
-        this.UI.extra_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification&fullscreen=true";
-
         if (this.need_hazards) {
+            this.UI.main_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification";
             this.UI.main_hazards_text.nodeValue = this._format_hazards(this.hazards);
         }
 
         if (this.need_extra_hazards) {
+            this.UI.extra_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification&fullscreen=true";
             this.UI.extra_hazards_text.nodeValue = this._format_hazards(this.extra_hazards);
         }
 
