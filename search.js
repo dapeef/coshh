@@ -174,6 +174,14 @@ class Substance {
             }
         }
 
+        // pubchem link
+        this.UI.pubchem_div = document.createElement("div");
+        this.UI.pubchem_div.classList.add("mini_header");
+        [this.UI.pubchem, this.UI.pubchem_text] = add_text_element("PubChem page", "", "a");
+        this.UI.pubchem_div.appendChild(this.UI.pubchem);
+        this.UI.content.appendChild(this.UI.pubchem_div);
+        this.UI.pubchem.target = "_blank";
+
 
         // add button and content to container
         this.UI.container.appendChild(this.UI.button)
@@ -236,6 +244,8 @@ class Substance {
                 this.UI.properties.bp.target = "_blank";
             }
         }
+        
+        this.UI.pubchem.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid;
     }
 
     _format_hazards(hazards) {
