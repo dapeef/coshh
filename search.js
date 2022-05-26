@@ -89,14 +89,24 @@ class Substance {
 
     _makeui() {
         function add_text_element(text, classes, type="div") {
-            const div = document.createElement(type);
+            const element = document.createElement(type);
             if (classes.length > 0) {
-                div.classList.add(classes);
+                element.classList.add(classes);
             }
-            const div_text = document.createTextNode(text);
-            div.appendChild(div_text);
+            const element_text = document.createTextNode(text);
+            element.appendChild(element_text);
 
-            return [div, div_text]
+            return [element, element_text]
+        }
+
+        function add_link_element(text, classes) {
+            let div = document.createElement("div");
+            div.classList.add(classes);
+            let [a, a_text] = add_text_element(text, "", "a");
+            div.appendChild(a);
+            a.target = "_blank";
+
+            return [div, a, a_text]
         }
 
         this.UI = new Object();
@@ -132,8 +142,8 @@ class Substance {
 
         // main hazards
         if (this.need_hazards) {
-            [this.UI.main_hazards_title, this.UI.main_hazards_title_text] = add_text_element("Main Hazards", "mini_header");
-            this.UI.content.appendChild(this.UI.main_hazards_title);
+            [this.UI.main_hazards_div, this.UI.main_hazards_title, this.UI.main_hazards_title_text] = add_link_element("Main Hazards", "mini_header");
+            this.UI.content.appendChild(this.UI.main_hazards_div);
 
             [this.UI.main_hazards, this.UI.main_hazards_text] = add_text_element("[Main hazards place holder]", "multiline");
             this.UI.content.appendChild(this.UI.main_hazards);
@@ -141,8 +151,8 @@ class Substance {
 
         // extra hazards
         if (this.need_extra_hazards) {
-            [this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_text_element("Extra Hazards", "mini_header");
-            this.UI.content.appendChild(this.UI.extra_hazards_title);
+            [this.UI.extra_hazards_div, this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_link_element("Extra Hazards", "mini_header");
+            this.UI.content.appendChild(this.UI.extra_hazards_div);
 
             [this.UI.extra_hazards, this.UI.extra_hazards_text] = add_text_element("[Extra hazards place holder]", "multiline");
             this.UI.content.appendChild(this.UI.extra_hazards);
@@ -174,12 +184,8 @@ class Substance {
         }
 
         // pubchem link
-        this.UI.pubchem_div = document.createElement("div");
-        this.UI.pubchem_div.classList.add("mini_header");
-        [this.UI.pubchem, this.UI.pubchem_text] = add_text_element("PubChem page", "", "a");
-        this.UI.pubchem_div.appendChild(this.UI.pubchem);
+        [this.UI.pubchem_div, this.UI.pubchem, this.UI.pubchem_text] = add_link_element("PubChem page", "mini_header")
         this.UI.content.appendChild(this.UI.pubchem_div);
-        this.UI.pubchem.target = "_blank";
 
 
         // add button and content to container
@@ -206,6 +212,10 @@ class Substance {
             this.UI.status_text.nodeValue = this.status;
             this.UI.status.style.maxHeight = this.UI.status.scrollHeight + "px";
         }
+
+
+        this.UI.main_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification";
+        this.UI.extra_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification&fullscreen=true";
 
         if (this.need_hazards) {
             this.UI.main_hazards_text.nodeValue = this._format_hazards(this.hazards);
