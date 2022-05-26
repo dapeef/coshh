@@ -13,10 +13,9 @@ const text_in = document.getElementById("text_in")
 const output_container = document.getElementById("output_container")
 
 
-// TODO double clicking go button
-// TODO go button formatting
-// TODO other chemical properties
 // TODO search box scroll bar?
+// TODO format searched_name
+
 
 let substances = [];
 
@@ -37,6 +36,10 @@ class Substance {
 
         this.hazards = [];
         this.extra_hazards = [];
+        this.mass = "No data";
+        this.density = "No data";
+        this.mp = "No data";
+        this.bp = "No data";
 
         this.status = "";
         this.error = null;
@@ -86,15 +89,13 @@ class Substance {
 
 
     _makeui() {
-        function add_text_div(text, classes) {
-            const div = document.createElement("div");
+        function add_text_element(text, classes, type="div") {
+            const div = document.createElement(type);
             if (classes.length > 0) {
                 div.classList.add(classes);
             }
             const div_text = document.createTextNode(text);
             div.appendChild(div_text);
-
-            console.log(div)
 
             return [div, div_text]
         }
@@ -118,11 +119,11 @@ class Substance {
         this.UI.button.appendChild(this.UI.name);
 
         // pubchem name
-        [this.UI.dictated_name, this.UI.dictated_name_text] = add_text_div(this.dictated_name, "dictated_name");
+        [this.UI.dictated_name, this.UI.dictated_name_text] = add_text_element(this.dictated_name, "dictated_name");
         this.UI.button.appendChild(this.UI.dictated_name);
 
         // status        
-        [this.UI.status, this.UI.status_text] = add_text_div(this.status, "output_status");
+        [this.UI.status, this.UI.status_text] = add_text_element(this.status, "output_status");
         this.UI.button.appendChild(this.UI.status);
 
 
@@ -132,20 +133,45 @@ class Substance {
 
         // main hazards
         if (this.need_hazards) {
-            [this.UI.main_hazards_title, this.UI.main_hazards_title_text] = add_text_div("Main Hazards", "mini_header");
+            [this.UI.main_hazards_title, this.UI.main_hazards_title_text] = add_text_element("Main Hazards", "mini_header");
             this.UI.content.appendChild(this.UI.main_hazards_title);
 
-            [this.UI.main_hazards, this.UI.main_hazards_text] = add_text_div("[Main hazards place holder]", "multiline");
+            [this.UI.main_hazards, this.UI.main_hazards_text] = add_text_element("[Main hazards place holder]", "multiline");
             this.UI.content.appendChild(this.UI.main_hazards);
         }
 
         // extra hazards
         if (this.need_extra_hazards) {
-            [this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_text_div("Extra Hazards", "mini_header");
+            [this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_text_element("Extra Hazards", "mini_header");
             this.UI.content.appendChild(this.UI.extra_hazards_title);
 
-            [this.UI.extra_hazards, this.UI.extra_hazards_text] = add_text_div("[Extra hazards place holder]", "multiline");
+            [this.UI.extra_hazards, this.UI.extra_hazards_text] = add_text_element("[Extra hazards place holder]", "multiline");
             this.UI.content.appendChild(this.UI.extra_hazards);
+        }
+
+        // physical properties
+        if (this.need_mass || this.need_density || this.need_mp || this.need_bp) {
+            this.UI.properties = new Object();
+
+            [this.UI.properties.title, this.UI.properties.title_text] = add_text_element("Physical Properties", "mini_header");
+            this.UI.content.appendChild(this.UI.properties.title);
+
+            if (this.need_mass) {
+                [this.UI.properties.mass, this.UI.properties.mass_text] = add_text_element("[Mass place holder]", "multiline");
+                this.UI.content.appendChild(this.UI.properties.mass);
+            }
+            if (this.need_density) {
+                [this.UI.properties.density, this.UI.properties.density_text] = add_text_element("[Density place holder]", "multiline", "a");
+                this.UI.content.appendChild(this.UI.properties.density);
+            }
+            if (this.need_mp) {
+                [this.UI.properties.mp, this.UI.properties.mp_text] = add_text_element("[Melting point place holder]", "multiline", "a");
+                this.UI.content.appendChild(this.UI.properties.mp);
+            }
+            if (this.need_bp) {
+                [this.UI.properties.bp, this.UI.properties.bp_text] = add_text_element("[Boiling point place holder]", "multiline", "a");
+                this.UI.content.appendChild(this.UI.properties.bp);
+            }
         }
 
 
@@ -158,8 +184,6 @@ class Substance {
     }
 
     _update_ui() {
-        console.log("UI update!")
-
         this.UI.name.nodeValue = this.searched_name;
 
         if (this.name == "") {
@@ -182,6 +206,35 @@ class Substance {
 
         if (this.need_extra_hazards) {
             this.UI.extra_hazards_text.nodeValue = this._format_hazards(this.extra_hazards);
+        }
+
+
+        if (this.need_mass) {
+            this.UI.properties.mass_text.nodeValue =  "Molecular Weight: " + this.mass;
+        }
+        if (this.need_density) {
+            this.UI.properties.density_text.nodeValue =  "Relative Density: " + this.density + "\n";
+
+            if (this.density != "No data") {
+                this.UI.properties.density.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=Density";
+                this.UI.properties.density.target = "_blank";
+            }
+        }
+        if (this.need_mp) {
+            this.UI.properties.mp_text.nodeValue =  "Melting point: " + this.mp + "\n";
+
+            if (this.mp != "No data") {
+                this.UI.properties.mp.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=Melting-Point";
+                this.UI.properties.mp.target = "_blank";
+            }
+        }
+        if (this.need_bp) {
+            this.UI.properties.bp_text.nodeValue =  "Boiling point: " + this.bp + "\n";
+
+            if (this.bp != "No data") {
+                this.UI.properties.bp.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=Boiling-Point";
+                this.UI.properties.bp.target = "_blank";
+            }
         }
     }
 
@@ -341,6 +394,67 @@ class Substance {
         }
         //#endregion
 
+        //#region Molecular weight
+        try {
+            let relevant = this.jraw["Record"]["Section"];
+            relevant = get_by_heading(relevant, "Chemical and Physical Properties")["Section"];
+            relevant = get_by_heading(relevant, "Computed Properties")["Section"];
+            relevant = get_by_heading(relevant, "Molecular Weight")["Information"][0]["Value"];
+
+            this.mass = relevant["StringWithMarkup"][0]["String"] + " " + relevant["Unit"];
+        } catch (error) {
+            console.log("Error while finding molecular weight: " + error);
+        }
+        //#endregion
+
+        //#region Density
+        try {
+            let relevant = this.jraw["Record"]["Section"];
+            relevant = get_by_heading(relevant, "Chemical and Physical Properties")["Section"];
+            relevant = get_by_heading(relevant, "Experimental Properties")["Section"];
+            relevant = get_by_heading(relevant, "Density")["Information"];
+
+            // let densities = [];
+
+            // for (let i = 0; i < relevant.length; i++) {
+            //     densities.push(relevant[i]["Value"]["StringWithMarkup"][0]["String"]);
+            // }
+
+            // console.log(densities);
+
+            this.density = relevant[0]["Value"]["StringWithMarkup"][0]["String"]
+        } catch (error) {
+            console.log("Error while finding relative density: " + error);
+        }
+        //#endregion
+
+        //#region Melting point
+        try {
+            let relevant = this.jraw["Record"]["Section"];
+            relevant = get_by_heading(relevant, "Chemical and Physical Properties")["Section"];
+            relevant = get_by_heading(relevant, "Experimental Properties")["Section"];
+            relevant = get_by_heading(relevant, "Melting Point")["Information"];
+
+            this.mp = relevant[0]["Value"]["StringWithMarkup"][0]["String"]
+        } catch (error) {
+            console.log("Error while finding relative melting point: " + error);
+        }
+        //#endregion
+        
+        //#region Boiling point
+        try {
+            let relevant = this.jraw["Record"]["Section"];
+            relevant = get_by_heading(relevant, "Chemical and Physical Properties")["Section"];
+            relevant = get_by_heading(relevant, "Experimental Properties")["Section"];
+            relevant = get_by_heading(relevant, "Boiling Point")["Information"];
+
+            this.bp = relevant[0]["Value"]["StringWithMarkup"][0]["String"]
+        } catch (error) {
+            console.log("Error while finding relative boiling point: " + error);
+        }
+        //#endregion
+
+
         this._make_foldable();
 
         this.status = "";
@@ -396,6 +510,7 @@ button.addEventListener("click", function() {
         button.disabled = false;
     }, 500);
 });
+
 
 $("#text_in").keypress(function(e) {
     if ((e.ctrlKey || e.metaKey) && (e.keyCode == 13 || e.keyCode == 10)) {
