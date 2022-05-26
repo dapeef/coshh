@@ -13,13 +13,20 @@ const text_in = document.getElementById("text_in")
 const output_container = document.getElementById("output_container")
 
 
+// TODO double clicking go button
+// TODO go button formatting
+// TODO ctrl-enter
+// TODO other chemical properties
+// TODO search box scroll bar?
+// TODO failed/pending substances unopenable
+
 let substances = [];
 
 
 class Substance {
     constructor(name, hazards, extra_hazards, mass, density, mp, bp) {
         this.searched_name = name;
-        this.name = name;
+        this.name = "";
         this.cid = null;
         this.jraw = null;
 
@@ -47,11 +54,36 @@ class Substance {
         }, 500, this.UI);
     }
 
+    on_click() {
+        this.classList.toggle("collapsible_active");
+            
+        var child = this.nextElementSibling;
+        var parent = this.parentElement;
+    
+        //for (var j = 0; j < children.length; j++) {
+        //    child = children[j];
+    
+        //    if (child.nodeType == 1) {
+        if (child.style.maxHeight){
+            child.style.maxHeight = null;
+            parent.style.padding = null;
+            parent.style.borderWidth = null;
+        } else {
+            child.style.maxHeight = child.scrollHeight + "px";
+            parent.style.padding = "2mm";
+            parent.style.borderWidth = "1px";
+        }
+        //    }
+    }
 
     fold_up() {
         if (this.UI.button.classList.contains("collapsible_active")) {
             this.UI.button.click();
         }
+    }
+
+    _make_foldable() {
+        this.UI.button.addEventListener("click", this.on_click);
     }
 
 
@@ -74,7 +106,6 @@ class Substance {
         // container
         this.UI.container = document.createElement("div");
         this.UI.container.classList.add("collapsible_container");
-
         setTimeout(function(UI) {
             UI.container.style.opacity = 1;
         }, 0, this.UI);
@@ -83,7 +114,6 @@ class Substance {
         // button
         this.UI.button = document.createElement("button");
         this.UI.button.classList.add("collapsible");
-        this.UI.button.addEventListener("click", on_collapsible_click);
 
         // searched name
         this.UI.name = document.createTextNode(this.name);
@@ -120,6 +150,7 @@ class Substance {
             this.UI.content.appendChild(this.UI.extra_hazards);
         }
 
+
         // add button and content to container
         this.UI.container.appendChild(this.UI.button)
         this.UI.container.appendChild(this.UI.content)
@@ -133,9 +164,14 @@ class Substance {
 
         this.UI.name.nodeValue = this.searched_name;
 
-        this.UI.dictated_name_text.nodeValue = "(" + this.name + ")";
+        if (this.name == "") {
+            this.UI.dictated_name.style.maxHeight = 0;
+        } else {
+            this.UI.dictated_name_text.nodeValue = "(" + this.name + ")";
+            this.UI.dictated_name.style.maxHeight = (this.UI.status.scrollHeight + 2) + "px";
+        }
 
-        if (this.status.length == 0) {
+        if (this.status == "") {
             this.UI.status.style.maxHeight = 0;
         } else {
             this.UI.status_text.nodeValue = this.status;
@@ -143,15 +179,15 @@ class Substance {
         }
 
         if (this.need_hazards) {
-            this.UI.main_hazards_text.nodeValue = this.format_hazards(this.hazards);
+            this.UI.main_hazards_text.nodeValue = this._format_hazards(this.hazards);
         }
 
         if (this.need_extra_hazards) {
-            this.UI.extra_hazards_text.nodeValue = this.format_hazards(this.extra_hazards);
+            this.UI.extra_hazards_text.nodeValue = this._format_hazards(this.extra_hazards);
         }
     }
 
-    format_hazards(hazards) {
+    _format_hazards(hazards) {
         let out_str = "";
 
         for (let i = 0; i < hazards.length; i++) {
@@ -170,12 +206,12 @@ class Substance {
         this.status = "Getting CID...";
         this._update_ui();
 
-        fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + this.name.toLowerCase() + "/property/Title/JSON")
+        fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + this.searched_name.toLowerCase() + "/property/Title/JSON")
             .then(response => {
                 if (response.ok) {
                     return response.json();
                 } else if (response.status === 404) {
-                    console.log("No CID found for " + this.name);
+                    console.log("No CID found for " + this.searched_name);
                     this.error = "Not in PubChem";
 
                     this.status = "Failed - not in PubChem"
@@ -191,12 +227,12 @@ class Substance {
                 this.cid = data["PropertyTable"]["Properties"][0]["CID"];
                 this.name = data["PropertyTable"]["Properties"][0]["Title"];
 
-                console.log("Found CID for " + this.name + ": " + this.cid);
+                console.log("Found CID for " + this.searched_name + ": " + this.cid);
 
                 this._get_json();
             })
             .catch(error => {
-                console.log("When searching for " + this.name + ", got " + error);
+                console.log("When searching for " + this.searched_name + ", got " + error);
                 this._update_ui()
             });
     }
@@ -298,44 +334,20 @@ class Substance {
 
             if (this.extra_hazards.length == 0) {
                 this.extra_hazards = ["No other hazards"]
-            }
-
-            console.log(this.hazards);
-            console.log(this.extra_hazards);            
+            }         
         } catch (error) {
-            console.log("Error while finding hazards: ");
+            console.log("Error while finding hazards: " + error);
             this.error = "No hazard data available";
             this.hazards = ["No hazard data available"];
             this.extra_hazards = ["No hazard data available"];
         }
         //#endregion
 
+        this._make_foldable();
+
         this.status = "";
         this._update_ui();
     }
-}
-
-
-function on_collapsible_click() {
-    this.classList.toggle("collapsible_active");
-        
-    var child = this.nextElementSibling;
-    var parent = this.parentElement;
-
-    //for (var j = 0; j < children.length; j++) {
-    //    child = children[j];
-
-    //    if (child.nodeType == 1) {
-    if (child.style.maxHeight){
-        child.style.maxHeight = null;
-        parent.style.padding = null;
-        parent.style.borderWidth = null;
-    } else {
-        child.style.maxHeight = child.scrollHeight + "px";
-        parent.style.padding = "2mm";
-        parent.style.borderWidth = "1px";
-    }
-    //    }
 }
 
 
@@ -376,6 +388,7 @@ button.addEventListener("click", function() {
     button_status.style.maxHeight = button_status.scrollHeight + "px";
     button_status.style.opacity = "1";
     button.style.backgroundColor = "blue";
+    button.disabled = "true";
 
     for (let i = 0; i < substances.length; i++) {
         substances[i].destroy();
@@ -383,5 +396,7 @@ button.addEventListener("click", function() {
     
     setTimeout(function() {
         search(get_names());
+        button.disabled = false;
     }, 500);
+});
 });

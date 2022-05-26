@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
     <head>
+        <meta charset="UTF-8"/>
         <title>
             Magic COSHH
         </title>
@@ -152,6 +153,8 @@
             .dictated_name {
                 font-size: medium;
                 font-weight: normal;
+                overflow: hidden;
+                transition: max-height 0.25s ease-in-out;
             }
 
             .output_status {
@@ -181,7 +184,7 @@
         <div class="box">
             <h1>COSHH magic</h1>
             <div class="main_frame border search_columns">
-                <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="border-radius: 2mm;">methanol
+                <textarea id="text_in" placeholder="Paste/type chemical names here..." class="border" style="font: inherit;">methanol
 gobbledegook</textarea>
                 <div class="border">
                     <div style="margin-bottom: 2mm">
@@ -193,7 +196,7 @@ gobbledegook</textarea>
                             <label for="hazards" class="search_options">Main hazards</label>
                         </div>
                         <div>
-                            <input type="checkbox" id="extra_hazards" name="extra_hazards" unchecked>
+                            <input type="checkbox" id="extra_hazards" name="extra_hazards" checked>
                             <label for="extra_hazards" class="search_options">Extra hazards</label>
                         </div>
                         <div>
