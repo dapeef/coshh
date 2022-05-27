@@ -1,16 +1,16 @@
-const hazards_checkbox = document.getElementById("hazards")
-const extra_hazards_checkbox = document.getElementById("extra_hazards")
-const hazard_brackets = document.getElementById("hazard_brackets")
-const mass_checkbox = document.getElementById("mass")
-const density_checkbox = document.getElementById("density")
-const mp_checkbox = document.getElementById("mp")
-const bp_checkbox = document.getElementById("bp")
+const hazards_checkbox = document.getElementById("hazards");
+const extra_hazards_checkbox = document.getElementById("extra_hazards");
+const hazard_brackets = document.getElementById("hazard_brackets");
+const mass_checkbox = document.getElementById("mass");
+const density_checkbox = document.getElementById("density");
+const mp_checkbox = document.getElementById("mp");
+const bp_checkbox = document.getElementById("bp");
 
-const button = document.getElementById("go_button")
-const button_status = document.getElementById("button_status")
-const progress = document.getElementById("progress")
-const text_in = document.getElementById("text_in")
-const output_container = document.getElementById("output_container")
+const button = document.getElementById("go_button");
+const button_status = document.getElementById("button_status");
+const progress = document.getElementById("progress");
+const text_in = document.getElementById("text_in");
+const output_container = document.getElementById("output_container");
 
 const checkboxes = document.getElementsByClassName("checkbox");
 
