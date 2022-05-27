@@ -12,7 +12,7 @@ const progress = document.getElementById("progress")
 const text_in = document.getElementById("text_in")
 const output_container = document.getElementById("output_container")
 
-const html_element = document.getElementById("html_element")
+const checkboxes = document.getElementsByClassName("checkbox");
 
 
 // TODO format searched_name?
@@ -529,8 +529,6 @@ function get_names() {
 
 
 function save_settings() {
-    console.log("hehe cookie saved");
-
     localStorage.setItem("text_input", text_in.value);
     localStorage.setItem("hazards", hazards_checkbox.checked);
     localStorage.setItem("extra_hazards", extra_hazards_checkbox.checked);
@@ -572,12 +570,20 @@ button.addEventListener("click", function() {
     }, 500);
 });
 
-
 $("#text_in").keypress(function(e) {
+    setTimeout(function() {
+        save_settings();
+    }, 50);
+
     if ((e.ctrlKey || e.metaKey) && (e.keyCode == 13 || e.keyCode == 10)) {
         button.click()
     }
 });
+
+
+for (var i = 0; i < checkboxes.length; i++) {
+    checkboxes[i].addEventListener("click", save_settings);
+}
 
 
 load_settings();
