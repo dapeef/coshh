@@ -14,6 +14,8 @@ const output_container = document.getElementById("output_container")
 
 
 // TODO format searched_name?
+// TODO cookies to save tickbox selection/search
+// TODO change repository name to lower case
 
 
 let substances = [];
@@ -41,10 +43,11 @@ class Substance {
         this.mp = "No data";
         this.bp = "No data";
 
-        this.status = "";
+        this.status = "Waiting to start...";
         this.error = null;
 
         this._makeui()
+        this._update_ui()
     }
 
     destroy() {
@@ -204,7 +207,7 @@ class Substance {
             this.UI.dictated_name.style.maxHeight = 0;
         } else {
             this.UI.dictated_name_text.nodeValue = "(" + this.name + ")";
-            this.UI.dictated_name.style.maxHeight = (this.UI.status.scrollHeight + 2) + "px";
+            this.UI.dictated_name.style.maxHeight = "calc(" + this.UI.status.scrollHeight + "px + 0.2em)";
         }
 
         if (this.status == "") {
@@ -269,7 +272,12 @@ class Substance {
 
     
     get_data() {
-        this._get_cid()
+        if (this.searched_name.includes("/")) {
+            this.status = "Substance searches can't include \"/\"";
+            this._update_ui();
+        } else {
+            this._get_cid()
+        }
     }
 
     _get_cid() {
@@ -284,11 +292,15 @@ class Substance {
                     console.log("No CID found for " + this.searched_name);
                     this.error = "Not in PubChem";
 
-                    this.status = "Failed - not in PubChem"
+                    this.status = "Failed - not in PubChem";
+
+                    throw Error(response.status);
+                } else if (response.status === 503) {
+                    this.status = "Failed while getting CID - too many requests in a short period of time - try searching manually into PubChem instead";
 
                     throw Error(response.status);
                 } else {
-                    this.status = "Failed while getting CID - unknown reason"
+                    this.status = "Failed while getting CID - unknown reason";
 
                     throw Error(response.status);
                 }
@@ -497,7 +509,9 @@ function search(names) {
             bp_checkbox.checked
         );
 
-        substance.get_data();
+        setTimeout(function() {
+            substance.get_data();
+        }, 200 * i);
 
         substances.push(substance);
     }
