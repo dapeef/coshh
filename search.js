@@ -12,9 +12,11 @@ const progress = document.getElementById("progress")
 const text_in = document.getElementById("text_in")
 const output_container = document.getElementById("output_container")
 
+const html_element = document.getElementById("html_element")
+
 
 // TODO format searched_name?
-// TODO cookies to save tickbox selection/search
+// TODO save settings after any edit
 // TODO change repository name to lower case
 
 
@@ -526,12 +528,39 @@ function get_names() {
 }
 
 
+function save_settings() {
+    console.log("hehe cookie saved");
+
+    localStorage.setItem("text_input", text_in.value);
+    localStorage.setItem("hazards", hazards_checkbox.checked);
+    localStorage.setItem("extra_hazards", extra_hazards_checkbox.checked);
+    localStorage.setItem("hazard_brackets", hazard_brackets.checked);
+    localStorage.setItem("mass", mass_checkbox.checked);
+    localStorage.setItem("density", density_checkbox.checked);
+    localStorage.setItem("mp", mp_checkbox.checked);
+    localStorage.setItem("bp", bp_checkbox.checked);
+}
+
+function load_settings() {
+    text_in.value = localStorage.getItem("text_input");
+    hazards_checkbox.checked = (localStorage.getItem("hazards") === 'true');
+    extra_hazards_checkbox.checked = (localStorage.getItem("extra_hazards") === 'true');
+    hazard_brackets.checked = (localStorage.getItem("hazard_brackets") === 'true');
+    mass_checkbox.checked = (localStorage.getItem("mass") === 'true');
+    density_checkbox.checked = (localStorage.getItem("density") === 'true');
+    mp_checkbox.checked = (localStorage.getItem("mp") === 'true');
+    bp_checkbox.checked = (localStorage.getItem("bp") === 'true');
+}
+
+
 button.addEventListener("click", function() {
     //progress.value = 0;
     // button_status.style.maxHeight = button_status.scrollHeight + "px";
     // button_status.style.opacity = "1";
     // button.style.backgroundColor = "blue";
     button.disabled = "true";
+
+    save_settings();
 
     for (let i = 0; i < substances.length; i++) {
         substances[i].destroy();
@@ -549,3 +578,6 @@ $("#text_in").keypress(function(e) {
         button.click()
     }
 });
+
+
+load_settings();
