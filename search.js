@@ -15,13 +15,8 @@ const output_container = document.getElementById("output_container");
 const checkboxes = document.getElementsByClassName("checkbox");
 
 
-// TODO format searched_name?
-// TODO save settings after delete - or onedit
-// TODO change repository name to lower case
-// TODO add credits for me
 // TODO add dapeef.github.io page for myself
-// TODO handle no checkboxes ticked
-// TODO look at caching fetches (to maybe get rid of server overload errors)
+// TODO add other API searches to have better chemical name recognition
 
 
 let substances = [];
@@ -55,6 +50,7 @@ class Substance {
         this._makeui()
         this._update_ui()
     }
+
 
     destroy() {
         this.UI.container.style.opacity = 0;
