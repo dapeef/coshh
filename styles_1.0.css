@@ -7,7 +7,7 @@ body {
     align-items: center;
     color: white;
     font-size: medium;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
     height: 100%;
     margin: 0;
 }
@@ -30,7 +30,7 @@ button {
     color: white;
     border-radius: 2mm;
     transition: all 0.3s;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-family: inherit;
 }
 
 textarea {
