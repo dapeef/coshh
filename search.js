@@ -16,8 +16,12 @@ const checkboxes = document.getElementsByClassName("checkbox");
 
 
 // TODO format searched_name?
-// TODO save settings after any edit
+// TODO save settings after delete - or onedit
 // TODO change repository name to lower case
+// TODO add credits for me
+// TODO add dapeef.github.io page for myself
+// TODO handle no checkboxes ticked
+// TODO look at caching fetches (to maybe get rid of server overload errors)
 
 
 let substances = [];
@@ -586,4 +590,6 @@ for (var i = 0; i < checkboxes.length; i++) {
 }
 
 
-load_settings();
+if (localStorage.getItem("text_input") !== null) {
+    load_settings();
+}
