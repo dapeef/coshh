@@ -17,7 +17,6 @@ const checkboxes = document.getElementsByClassName("checkbox");
 
 // TODO add dapeef.github.io page for myself
 // TODO add other API searches to have better chemical name recognition
-// TODO website logo
 
 
 let substances = [];
