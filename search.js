@@ -17,6 +17,7 @@ const checkboxes = document.getElementsByClassName("checkbox");
 
 // TODO add dapeef.github.io page for myself
 // TODO add other API searches to have better chemical name recognition
+// TODO website logo
 
 
 let substances = [];
@@ -282,11 +283,33 @@ class Substance {
         }
     }
 
-    _get_cid() {
+    _cooldown(time, type, thiz=this) { //} ui_update_fn=this._update_ui, cooldown_fn=this._cooldown) {
+        if (time > 0) {
+            thiz.status = "Failed while getting " + type.toUpperCase() + " - too many requests in a short period of time - trying again in " + time.toFixed(1) + " secs";
+            thiz._update_ui();
+
+            setTimeout(thiz._cooldown, 100, time - 0.1, type, thiz);
+        } else {
+            if (type == "cid") {
+                thiz._get_cid(true);
+            }
+            if (type == "json") {
+                thiz._get_json(true);
+            }
+        }
+    }
+
+    _get_cid(retry=true) {
         this.status = "Getting CID...";
         this._update_ui();
 
-        fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + this.searched_name.toLowerCase() + "/property/Title/JSON")
+        var myInit = {method: 'GET'};
+
+        if (retry) {
+            myInit["cache"] = "no-cache";
+        }
+
+        fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + this.searched_name.toLowerCase() + "/property/Title/JSON", myInit)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -298,7 +321,9 @@ class Substance {
 
                     throw Error(response.status);
                 } else if (response.status === 503) {
-                    this.status = "Failed while getting CID - too many requests in a short period of time - try searching manually into PubChem instead";
+                    let cooldown_time = Math.random() + 0.5;
+
+                    this._cooldown(cooldown_time, "cid");
 
                     throw Error(response.status);
                 } else {
@@ -321,14 +346,26 @@ class Substance {
             });
     }
 
-    _get_json() {
+    _get_json(retry=true) {
         this.status = "Getting data from PubChem..."
         this._update_ui();
 
-        fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + this.cid + "/JSON")
+        var myInit = {method: 'GET'};
+
+        if (retry) {
+            myInit["cache"] = "no-cache";
+        }
+
+        fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + this.cid + "/JSON", myInit)
             .then(response => {
                 if (response.ok) {
                     return response.json();
+                } else if (response.status === 503) {
+                    let cooldown_time = Math.random() + 0.5;
+
+                    this._cooldown(cooldown_time, "json");
+
+                    throw Error(response.status);
                 } else {
                     this.error = "Can't get PubChem data";
                     this.status = "Failed while getting JSON - unknown reason"
