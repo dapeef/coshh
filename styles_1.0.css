@@ -49,13 +49,13 @@ textarea::placeholder {
 }
 
 a:link {
-    color: rgb(149, 159, 247);
+    color: dodgerblue;
 }
 a:visited {
-    color: rgb(248, 163, 248);
+    color: mediumpurple;
 }
 a:active {
-    color: white;
+    color: grey;
 }
 
 /* progress {
@@ -196,4 +196,16 @@ a:active {
     white-space: pre-wrap;
     margin-top: 1mm;
     word-wrap: break-word;
+    background-color: white;
+    width: fit-content;
+    color: black;
+    border-radius: 1mm;
+    padding: 1mm;
+}
+
+.plain_text {
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    color: black;
 }

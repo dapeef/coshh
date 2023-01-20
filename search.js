@@ -164,22 +164,25 @@ class Substance {
 
             [this.UI.properties.title, this.UI.properties.title_text] = add_text_element("Physical Properties", "mini_header");
             this.UI.content.appendChild(this.UI.properties.title);
+            
+            [this.UI.properties.text_container, this.UI.properties.text_container_text] = add_text_element("", "multiline");
+            this.UI.content.appendChild(this.UI.properties.text_container);
 
             if (this.options.mass) {
-                [this.UI.properties.mass, this.UI.properties.mass_text] = add_text_element("[Mass place holder]", "multiline");
-                this.UI.content.appendChild(this.UI.properties.mass);
+                [this.UI.properties.mass, this.UI.properties.mass_text] = add_text_element("[Mass place holder]", "plain_text");
+                this.UI.properties.text_container.appendChild(this.UI.properties.mass);
             }
             if (this.options.density) {
-                [this.UI.properties.density, this.UI.properties.density_text] = add_text_element("[Density place holder]", "multiline", "a");
-                this.UI.content.appendChild(this.UI.properties.density);
+                [this.UI.properties.density, this.UI.properties.density_text] = add_text_element("[Density place holder]", "plain_text", "a");
+                this.UI.properties.text_container.appendChild(this.UI.properties.density);
             }
             if (this.options.mp) {
-                [this.UI.properties.mp, this.UI.properties.mp_text] = add_text_element("[Melting point place holder]", "multiline", "a");
-                this.UI.content.appendChild(this.UI.properties.mp);
+                [this.UI.properties.mp, this.UI.properties.mp_text] = add_text_element("[Melting point place holder]", "plain_text", "a");
+                this.UI.properties.text_container.appendChild(this.UI.properties.mp);
             }
             if (this.options.bp) {
-                [this.UI.properties.bp, this.UI.properties.bp_text] = add_text_element("[Boiling point place holder]", "multiline", "a");
-                this.UI.content.appendChild(this.UI.properties.bp);
+                [this.UI.properties.bp, this.UI.properties.bp_text] = add_text_element("[Boiling point place holder]", "plain_text", "a");
+                this.UI.properties.text_container.appendChild(this.UI.properties.bp);
             }
         }
 
