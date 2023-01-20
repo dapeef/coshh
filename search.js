@@ -25,21 +25,13 @@ let substances = [];
 
 
 class Substance {
-    constructor(name, hazards, extra_hazards, hazard_brackets, tidy_h_codes, redundant_h_codes, mass, density, mp, bp) {
+    constructor(name, options) {
         this.searched_name = name;
         this.name = "";
         this.cid = null;
         this.jraw = null;
 
-        this.need_hazards = hazards;
-        this.need_extra_hazards = extra_hazards;
-        this.need_hazard_brackets = hazard_brackets;
-        this.tidy_h_codes = tidy_h_codes;
-        this.redundant_h_codes = redundant_h_codes;
-        this.need_mass = mass;
-        this.need_density = density;
-        this.need_mp = mp;
-        this.need_bp = bp;
+        this.options = options;
 
         this.hazards = [];
         this.extra_hazards = [];
@@ -54,7 +46,6 @@ class Substance {
         this._makeui()
         this._update_ui()
     }
-
 
     destroy() {
         this.UI.container.style.opacity = 0;
@@ -95,7 +86,6 @@ class Substance {
     _make_foldable() {
         this.UI.button.addEventListener("click", this.on_click);
     }
-
 
     _makeui() {
         function add_text_element(text, classes, type="div") {
@@ -151,7 +141,7 @@ class Substance {
         this.UI.content.classList.add("collapsible_content");
 
         // main hazards
-        if (this.need_hazards) {
+        if (this.options.hazards) {
             [this.UI.main_hazards_div, this.UI.main_hazards_title, this.UI.main_hazards_title_text] = add_link_element("Main Hazards", "mini_header");
             this.UI.content.appendChild(this.UI.main_hazards_div);
 
@@ -160,7 +150,7 @@ class Substance {
         }
 
         // extra hazards
-        if (this.need_extra_hazards) {
+        if (this.options.extra_hazards) {
             [this.UI.extra_hazards_div, this.UI.extra_hazards_title, this.UI.extra_hazards_title_text] = add_link_element("Extra Hazards", "mini_header");
             this.UI.content.appendChild(this.UI.extra_hazards_div);
 
@@ -169,25 +159,25 @@ class Substance {
         }
 
         // physical properties
-        if (this.need_mass || this.need_density || this.need_mp || this.need_bp) {
+        if (this.options.mass || this.options.density || this.options.mp || this.options.bp) {
             this.UI.properties = new Object();
 
             [this.UI.properties.title, this.UI.properties.title_text] = add_text_element("Physical Properties", "mini_header");
             this.UI.content.appendChild(this.UI.properties.title);
 
-            if (this.need_mass) {
+            if (this.options.mass) {
                 [this.UI.properties.mass, this.UI.properties.mass_text] = add_text_element("[Mass place holder]", "multiline");
                 this.UI.content.appendChild(this.UI.properties.mass);
             }
-            if (this.need_density) {
+            if (this.options.density) {
                 [this.UI.properties.density, this.UI.properties.density_text] = add_text_element("[Density place holder]", "multiline", "a");
                 this.UI.content.appendChild(this.UI.properties.density);
             }
-            if (this.need_mp) {
+            if (this.options.mp) {
                 [this.UI.properties.mp, this.UI.properties.mp_text] = add_text_element("[Melting point place holder]", "multiline", "a");
                 this.UI.content.appendChild(this.UI.properties.mp);
             }
-            if (this.need_bp) {
+            if (this.options.bp) {
                 [this.UI.properties.bp, this.UI.properties.bp_text] = add_text_element("[Boiling point place holder]", "multiline", "a");
                 this.UI.content.appendChild(this.UI.properties.bp);
             }
@@ -224,21 +214,21 @@ class Substance {
         }
 
 
-        if (this.need_hazards) {
+        if (this.options.hazards) {
             this.UI.main_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification";
             this.UI.main_hazards_text.nodeValue = this._format_hazards(this.hazards);
         }
 
-        if (this.need_extra_hazards) {
+        if (this.options.extra_hazards) {
             this.UI.extra_hazards_title.href = "https://pubchem.ncbi.nlm.nih.gov/compound/" + this.cid + "#section=GHS-Classification&fullscreen=true";
             this.UI.extra_hazards_text.nodeValue = this._format_hazards(this.extra_hazards);
         }
 
 
-        if (this.need_mass) {
+        if (this.options.mass) {
             this.UI.properties.mass_text.nodeValue =  "Molecular Weight: " + this.mass;
         }
-        if (this.need_density) {
+        if (this.options.density) {
             this.UI.properties.density_text.nodeValue =  "Relative Density: " + this.density + "\n";
 
             if (this.density != "No data") {
@@ -246,7 +236,7 @@ class Substance {
                 this.UI.properties.density.target = "_blank";
             }
         }
-        if (this.need_mp) {
+        if (this.options.mp) {
             this.UI.properties.mp_text.nodeValue =  "Melting point: " + this.mp + "\n";
 
             if (this.mp != "No data") {
@@ -254,7 +244,7 @@ class Substance {
                 this.UI.properties.mp.target = "_blank";
             }
         }
-        if (this.need_bp) {
+        if (this.options.bp) {
             this.UI.properties.bp_text.nodeValue =  "Boiling point: " + this.bp + "\n";
 
             if (this.bp != "No data") {
@@ -276,7 +266,6 @@ class Substance {
         return out_str //.substring(0, -1)
     }
 
-    
     get_data() {
         if (this.searched_name.includes("/")) {
             this.status = "Substance searches can't include \"/\"";
@@ -410,18 +399,18 @@ class Substance {
         }
 
         //#region Hazards
-        function get_hazards_from_object(hazard_object, need_hazard_brackets, tidy_h_codes, redundant_h_codes) {
+        function get_hazards_from_object(hazard_object, options) {
             let hazard_frames = hazard_object["Value"]["StringWithMarkup"];
             let hazards = [];
 
             for (let j = 0; j < hazard_frames.length; j++) {
                 let hazard = hazard_frames[j]["String"];
 
-                if (!need_hazard_brackets) {
+                if (!options.hazard_brackets) {
                     hazard = hazard.split("[")[0].trim();
                 }
 
-                if (tidy_h_codes) {
+                if (options.tidy_h_codes) {
                     let split_hazard = hazard.split(":");
 
                     // Remove anything between H number and :
@@ -430,8 +419,9 @@ class Substance {
                     hazard = split_hazard.join(":")
                 }
 
-                if (redundant_h_codes) {
+                if (options.redundant_h_codes) {
                     // Do things
+                    console.log("doing redundant things");
                 }
 
                 hazards.push(hazard);
@@ -460,12 +450,12 @@ class Substance {
             let hazard_objects = get_by_heading(relevant, "GHS Hazard Statements", "Name", true);
 
             // Get main hazard set
-            this.hazards = get_hazards_from_object(hazard_objects[0], this.need_hazard_brackets, this.tidy_h_codes, this.redundant_h_codes);
+            this.hazards = get_hazards_from_object(hazard_objects[0], this.options);
             
             // Get all hazards
             this.all_hazards = [];
             for (let i = 0; i < hazard_objects.length; i++) {
-                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i], this.need_hazard_brackets, this.tidy_h_codes, this.redundant_h_codes));
+                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i], this.options));
             }
 
             // Filter all hazards to get extra hazards
@@ -551,20 +541,20 @@ function search(names) {
     console.log("Started search with: " + names);
 
     substances = [];
+    options = {
+        "hazards":              hazards_checkbox.checked,
+        "extra_hazards":        extra_hazards_checkbox.checked,
+        "hazard_brackets":      hazard_brackets_checkbox.checked,
+        "tidy_h_codes":         tidy_h_codes_checkbox.checked,
+        "redundant_h_codes":    redundant_h_codes_checkbox.checked,
+        "mass":                 mass_checkbox.checked,
+        "density":              density_checkbox.checked,
+        "mp":                   mp_checkbox.checked,
+        "bp":                   bp_checkbox.checked
+    }
 
     for (let i = 0; i < names.length; i++) {
-        let substance = new Substance(
-            names[i],
-            hazards_checkbox.checked,
-            extra_hazards_checkbox.checked,
-            hazard_brackets_checkbox.checked,
-            tidy_h_codes_checkbox.checked,
-            redundant_h_codes_checkbox.checked,
-            mass_checkbox.checked,
-            density_checkbox.checked,
-            mp_checkbox.checked,
-            bp_checkbox.checked
-        );
+        let substance = new Substance(names[i], options);
 
         setTimeout(function() {
             substance.get_data();
