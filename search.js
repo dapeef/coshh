@@ -437,40 +437,8 @@ class Substance {
             return unique;
         }
 
-        try {
         function prioritise_hazards(hazards, options) {
-            // function prioritise(hazards, groups) {
-            //     let prioritised_hazards = [];
-
-            //     for (let i = 0; i < groups.length; i++) {
-            //         const group = groups[i];
-
-            //         let best_hazard = null;
-                    
-            //         for (let j = 0; j < group.length; j++) {
-            //             const h_code = group[j].toString();
-                        
-            //             for (let k = 0; k < hazards.length; k++) {
-            //                 const hazard = hazards[k];
-                            
-            //                 if (hazard.substring(1, 4) == h_code) {
-            //                     best_hazard = hazard;
-            //                 }
-            //             }
-            //         }
-
-            //         if (best_hazard != null) {
-            //             prioritised_hazards.push(best_hazard);
-            //         }
-            //     }
-
-            //     return prioritised_hazards
-            // }
-
             if (options.redundant_h_codes) {
-                // let prioritised_hazards = prioritise(hazards, h_code_groups[0]);
-                // prioritised_hazards = prioritise(prioritised_hazards, h_code_groups[1]); // Run again for 2nd level of prioritisation
-
                 let redundant_indices = [];
 
                 for (let i = 0; i < hazards.length; i++) {
@@ -494,6 +462,8 @@ class Substance {
                                     
                                     if (check_hazard.substring(1, 4) == predator) {
                                         necessary = false;
+
+                                        // console.log("Found predator to " + hazards[i] + " (" + i.toString() + ") --- " + predator)
                                     }
                                 }
                             }
@@ -504,24 +474,26 @@ class Substance {
                         redundant_indices.push(i);
                     }
                 }
-
-                redundant_indices.sort();
-                redundant_indices.reverse();
                 
-                console.log(redundant_indices);
+                // console.log(redundant_indices);
 
-                for (let i = 0; i < redundant_indices.length; i++) {
-                    const index = redundant_indices[i];
+                let out_hazards = [];
 
-                    console.log(hazards.splice(index, 1));
+                for (let i = 0; i < hazards.length; i++) {
+                    const hazard = hazards[i];
+                    
+                    if (!redundant_indices.includes(i)) {
+                        out_hazards.push(hazard);
+                    }
                 }
 
-                return hazards
+                return out_hazards
             } else {
                 return hazards
             }
         }
 
+        try {
             let relevant = this.jraw["Record"]["Section"];
             relevant = get_by_heading(relevant, "Safety and Hazards")["Section"];
             relevant = get_by_heading(relevant, "Hazards Identification")["Section"];
@@ -551,6 +523,12 @@ class Substance {
             if (this.extra_hazards.length == 0) {
                 this.extra_hazards = ["No other hazards found"]
             }         
+        } catch (error) {
+            console.log("Error while finding hazards: " + error);
+            this.error = "No hazard data available";
+            this.hazards = ["No hazard data available"];
+            this.extra_hazards = ["No hazard data available"];
+        }
         //#endregion
 
         //#region Molecular weight
