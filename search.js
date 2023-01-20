@@ -466,7 +466,7 @@ class Substance {
             }
 
             if (this.extra_hazards.length == 0) {
-                this.extra_hazards = ["No other hazards"]
+                this.extra_hazards = ["No other hazards found"]
             }         
         } catch (error) {
             console.log("Error while finding hazards: " + error);
