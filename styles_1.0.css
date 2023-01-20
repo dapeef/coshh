@@ -202,3 +202,10 @@ a:active {
     border-radius: 1mm;
     padding: 1mm;
 }
+
+.plain_text {
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    color: black;
+}
