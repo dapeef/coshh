@@ -2,6 +2,7 @@ const hazards_checkbox = document.getElementById("hazards");
 const extra_hazards_checkbox = document.getElementById("extra_hazards");
 const hazard_brackets_checkbox = document.getElementById("hazard_brackets");
 const tidy_h_codes_checkbox = document.getElementById("tidy_h_codes");
+const redundant_h_codes_checkbox = document.getElementById("redundant_h_codes");
 const mass_checkbox = document.getElementById("mass");
 const density_checkbox = document.getElementById("density");
 const mp_checkbox = document.getElementById("mp");
@@ -24,7 +25,7 @@ let substances = [];
 
 
 class Substance {
-    constructor(name, hazards, extra_hazards, hazard_brackets, tidy_h_codes, mass, density, mp, bp) {
+    constructor(name, hazards, extra_hazards, hazard_brackets, tidy_h_codes, redundant_h_codes, mass, density, mp, bp) {
         this.searched_name = name;
         this.name = "";
         this.cid = null;
@@ -34,6 +35,7 @@ class Substance {
         this.need_extra_hazards = extra_hazards;
         this.need_hazard_brackets = hazard_brackets;
         this.tidy_h_codes = tidy_h_codes;
+        this.redundant_h_codes = redundant_h_codes;
         this.need_mass = mass;
         this.need_density = density;
         this.need_mp = mp;
@@ -408,7 +410,7 @@ class Substance {
         }
 
         //#region Hazards
-        function get_hazards_from_object(hazard_object, need_hazard_brackets, tidy_h_codes) {
+        function get_hazards_from_object(hazard_object, need_hazard_brackets, tidy_h_codes, redundant_h_codes) {
             let hazard_frames = hazard_object["Value"]["StringWithMarkup"];
             let hazards = [];
 
@@ -426,6 +428,10 @@ class Substance {
                     split_hazard[0] = split_hazard[0].slice(0, 4);
 
                     hazard = split_hazard.join(":")
+                }
+
+                if (redundant_h_codes) {
+                    // Do things
                 }
 
                 hazards.push(hazard);
@@ -454,12 +460,12 @@ class Substance {
             let hazard_objects = get_by_heading(relevant, "GHS Hazard Statements", "Name", true);
 
             // Get main hazard set
-            this.hazards = get_hazards_from_object(hazard_objects[0], this.need_hazard_brackets, this.tidy_h_codes);
+            this.hazards = get_hazards_from_object(hazard_objects[0], this.need_hazard_brackets, this.tidy_h_codes, this.redundant_h_codes);
             
             // Get all hazards
             this.all_hazards = [];
             for (let i = 0; i < hazard_objects.length; i++) {
-                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i], this.need_hazard_brackets, this.tidy_h_codes));
+                this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i], this.need_hazard_brackets, this.tidy_h_codes, this.redundant_h_codes));
             }
 
             // Filter all hazards to get extra hazards
@@ -553,6 +559,7 @@ function search(names) {
             extra_hazards_checkbox.checked,
             hazard_brackets_checkbox.checked,
             tidy_h_codes_checkbox.checked,
+            redundant_h_codes_checkbox.checked,
             mass_checkbox.checked,
             density_checkbox.checked,
             mp_checkbox.checked,
@@ -582,6 +589,7 @@ function save_settings() {
     localStorage.setItem("extra_hazards", extra_hazards_checkbox.checked);
     localStorage.setItem("hazard_brackets", hazard_brackets_checkbox.checked);
     localStorage.setItem("tidy_h_codes", tidy_h_codes_checkbox.checked);
+    localStorage.setItem("redundant_h_codes", redundant_h_codes_checkbox.checked);
     localStorage.setItem("mass", mass_checkbox.checked);
     localStorage.setItem("density", density_checkbox.checked);
     localStorage.setItem("mp", mp_checkbox.checked);
@@ -594,6 +602,7 @@ function load_settings() {
     extra_hazards_checkbox.checked = (localStorage.getItem("extra_hazards") === 'true');
     hazard_brackets_checkbox.checked = (localStorage.getItem("hazard_brackets") === 'true');
     tidy_h_codes_checkbox.checked = (localStorage.getItem("tidy_h_codes") === 'true');
+    redundant_h_codes_checkbox.checked = (localStorage.getItem("redundant_h_codes") === 'true');
     mass_checkbox.checked = (localStorage.getItem("mass") === 'true');
     density_checkbox.checked = (localStorage.getItem("density") === 'true');
     mp_checkbox.checked = (localStorage.getItem("mp") === 'true');
