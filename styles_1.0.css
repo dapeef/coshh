@@ -196,4 +196,9 @@ a:active {
     white-space: pre-wrap;
     margin-top: 1mm;
     word-wrap: break-word;
+    background-color: white;
+    width: fit-content;
+    color: black;
+    border-radius: 1mm;
+    padding: 1mm;
 }
