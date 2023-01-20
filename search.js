@@ -419,11 +419,6 @@ class Substance {
                     hazard = split_hazard.join(":")
                 }
 
-                if (options.redundant_h_codes) {
-                    // Do things
-                    console.log("doing redundant things");
-                }
-
                 hazards.push(hazard);
             }
 
@@ -443,6 +438,90 @@ class Substance {
         }
 
         try {
+        function prioritise_hazards(hazards, options) {
+            // function prioritise(hazards, groups) {
+            //     let prioritised_hazards = [];
+
+            //     for (let i = 0; i < groups.length; i++) {
+            //         const group = groups[i];
+
+            //         let best_hazard = null;
+                    
+            //         for (let j = 0; j < group.length; j++) {
+            //             const h_code = group[j].toString();
+                        
+            //             for (let k = 0; k < hazards.length; k++) {
+            //                 const hazard = hazards[k];
+                            
+            //                 if (hazard.substring(1, 4) == h_code) {
+            //                     best_hazard = hazard;
+            //                 }
+            //             }
+            //         }
+
+            //         if (best_hazard != null) {
+            //             prioritised_hazards.push(best_hazard);
+            //         }
+            //     }
+
+            //     return prioritised_hazards
+            // }
+
+            if (options.redundant_h_codes) {
+                // let prioritised_hazards = prioritise(hazards, h_code_groups[0]);
+                // prioritised_hazards = prioritise(prioritised_hazards, h_code_groups[1]); // Run again for 2nd level of prioritisation
+
+                let redundant_indices = [];
+
+                for (let i = 0; i < hazards.length; i++) {
+                    const hazard_code = hazards[i].substring(1, 4);
+
+                    let necessary = true;
+
+                    for (let j = 0; j < h_code_groups.length; j++) {
+                        const group = h_code_groups[j];
+                        
+                        if (group.includes(hazard_code)) {
+                            const index = group.indexOf(hazard_code);
+
+                            const predator_group = group.slice(index + 1);
+
+                            for (let k = 0; k < predator_group.length; k++) {
+                                const predator = predator_group[k];
+                                
+                                for (let l = 0; l < hazards.length; l++) {
+                                    const check_hazard = hazards[l];
+                                    
+                                    if (check_hazard.substring(1, 4) == predator) {
+                                        necessary = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!necessary) {
+                        redundant_indices.push(i);
+                    }
+                }
+
+                redundant_indices.sort();
+                redundant_indices.reverse();
+                
+                console.log(redundant_indices);
+
+                for (let i = 0; i < redundant_indices.length; i++) {
+                    const index = redundant_indices[i];
+
+                    console.log(hazards.splice(index, 1));
+                }
+
+                return hazards
+            } else {
+                return hazards
+            }
+        }
+
             let relevant = this.jraw["Record"]["Section"];
             relevant = get_by_heading(relevant, "Safety and Hazards")["Section"];
             relevant = get_by_heading(relevant, "Hazards Identification")["Section"];
@@ -451,12 +530,16 @@ class Substance {
 
             // Get main hazard set
             this.hazards = get_hazards_from_object(hazard_objects[0], this.options);
+            this.hazards.sort();
+            this.hazards = prioritise_hazards(this.hazards, this.options);
             
             // Get all hazards
             this.all_hazards = [];
             for (let i = 0; i < hazard_objects.length; i++) {
                 this.all_hazards = this.all_hazards.concat(get_hazards_from_object(hazard_objects[i], this.options));
             }
+            this.hazards.sort();
+            this.all_hazards = prioritise_hazards(this.all_hazards, this.options);
 
             // Filter all hazards to get extra hazards
             for (let i = 0; i < this.all_hazards.length; i++) {
@@ -468,12 +551,6 @@ class Substance {
             if (this.extra_hazards.length == 0) {
                 this.extra_hazards = ["No other hazards found"]
             }         
-        } catch (error) {
-            console.log("Error while finding hazards: " + error);
-            this.error = "No hazard data available";
-            this.hazards = ["No hazard data available"];
-            this.extra_hazards = ["No hazard data available"];
-        }
         //#endregion
 
         //#region Molecular weight
