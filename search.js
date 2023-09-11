@@ -625,7 +625,9 @@ function search(names) {
 
 function get_names() {
     raw = text_in.value;
-    names = raw.split(/\r?\n/).filter(element => element);
+    names = raw.split(/\r?\n/)
+        .map(element => element.trim())
+        .filter(element => element);
     
     return names;
 }
