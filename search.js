@@ -17,7 +17,6 @@ const output_container = document.getElementById("output_container");
 const checkboxes = document.getElementsByClassName("checkbox");
 
 
-// TODO add dapeef.github.io page for myself
 // TODO add other API searches to have better chemical name recognition
 
 
@@ -57,24 +56,25 @@ class Substance {
 
     on_click() {
         this.classList.toggle("collapsible_active");
-            
+        
         var child = this.nextElementSibling;
         var parent = this.parentElement;
-    
-        //for (var j = 0; j < children.length; j++) {
-        //    child = children[j];
-    
-        //    if (child.nodeType == 1) {
+
         if (child.style.maxHeight){
             child.style.maxHeight = null;
             parent.style.padding = null;
-            parent.style.borderWidth = null;
+            setTimeout(function(parent, child) {
+                // child.style.paddingLeft = "calc(2mm + 1px)";
+                child.style.paddingRight = "calc(4mm + 2px)";
+                parent.style.borderWidth = null;
+            }, 250, parent, child);
         } else {
             child.style.maxHeight = child.scrollHeight + "px";
+            // child.style.paddingLeft = 0;
+            child.style.paddingRight = 0;
             parent.style.padding = "2mm";
             parent.style.borderWidth = "1px";
         }
-        //    }
     }
 
     fold_up() {

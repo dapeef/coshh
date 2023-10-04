@@ -138,7 +138,7 @@ a:active {
     margin: 2mm;
     text-align: left;
     opacity: 0; 
-    transition: padding 0.25s, border 0.25s, opacity 0.5s;
+    transition: padding 0.25s, opacity 0.5s; /* , border 0.25s; */
 }
 
 .collapsible {
@@ -164,7 +164,9 @@ a:active {
 .collapsible_content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.25s ease-in-out;
+    /* padding-left: calc(2mm + 1px); */
+    padding-right: calc(4mm + 2px);
+    transition: max-height 0.25s ease-in-out, padding-right 0.25s;
     font-weight: normal;
     font-size: small;
 }
